@@ -51,7 +51,9 @@ components/
   desk/                          # Zustandsautomat, Wake, Bewegungssicherheit
   profiles/                      # qualifizierte Modellprofile
   storage/                       # NVS-Konfiguration und Profilmigration
-  api/                           # lokale/Netzwerk-Schnittstelle, autorisiert Befehle
+  api/                           # lokale HTTP-/WebSocket-API, authentifiziert Befehle
+  webui/                         # eingebettete, versionierte statische Web-Oberfläche
+  mqtt/                          # MQTT-Client, HA Discovery und Zustands-Publisher
   diagnostics/                   # strukturierte USB-Logs, Zähler, Testtracing
 test/                            # Native/Unity-Komponententests
 tools/                           # Upstream-Vektorimport, Replay- und Profilvalidierung
@@ -62,7 +64,46 @@ Keine Desk-Framing-Bytes, Baudraten oder Wake-Zeiten gehören als globale Konsta
 
 ### 3.2 Konfiguration und Secrets
 
-NVS enthält nur Nutzerkonfiguration (aktives Profil, Betriebsmodus, zulässige Automationen, Netzwerkzugang). Secrets und Testdaten kommen nicht ins Repository; `secrets.example.h` bzw. PlatformIO-Environment-Variablen dokumentieren die benötigten Werte. Beim Start wird die gespeicherte Konfiguration gegen Schema- und Profilversion validiert. Fehlt oder scheitert sie, startet PandaDesk im **Safe/Unconfigured**-Zustand ohne aktive Desk-Befehle und ohne Inline-Forwarding.
+NVS enthält nur Nutzerkonfiguration (aktives Profil, Betriebsmodus, zulässige Automationen, Netzwerkzugang, API-Token-Hash und MQTT-Zugangsdaten). Secrets und Testdaten kommen nicht ins Repository; `secrets.example.h` bzw. PlatformIO-Environment-Variablen dokumentieren die benötigten Werte. Beim Start wird die gespeicherte Konfiguration gegen Schema- und Profilversion validiert. Fehlt oder scheitert sie, startet PandaDesk im **Safe/Unconfigured**-Zustand ohne aktive Desk-Befehle und ohne Inline-Forwarding.
+
+## 3.3 Lokale Web UI und Steuer-API
+
+Die Web UI ist ein schlanker, statisch in die Firmware eingebetteter Single-Page-Client. Sie wird ausschließlich über dieselbe versionierte lokale HTTP-API versorgt und enthält keine zweite Desk-Logik. Sie zeigt Profil, Online-/Fehlerzustand, aktuelle Höhe inklusive Datenqualität, Bewegung, Wake-Zustand, Kindersperren-Status, Netzwerk-/MQTT-Status und Diagnosezähler. Bedienung bietet Halten für Auf/Ab, Stop, Zielhöhe, gespeicherte Positionen sowie Kindersperre **nur dann**, wenn das aktive Profil diese Fähigkeiten ausweist. Unverfügbare Fähigkeiten werden nicht als wirkungslose Steuerung angezeigt.
+
+Alle Bewegungsbefehle enden am `desk_state_task` und anschließend am exklusiven TX-Arbiter; HTTP, WebSocket und MQTT sind gleichberechtigte, aber nicht privilegierte Intent-Quellen. Die UI erhält Zustandsänderungen über einen lokalen WebSocket (`/api/v1/events`) und fällt bei Verbindungsabbruch auf lesende Abfragen zurück. Ein UI-Klick gilt erst nach API-Annahme als angenommen, nicht als bestätigte Tischbewegung.
+
+Der API-Vertrag liegt als versionierte OpenAPI-Datei unter `docs/api/openapi.yaml`. Minimaler V1-Vertrag:
+
+| Methode / Pfad | Zweck | Ergebnis |
+|---|---|---|
+| `GET /api/v1/state` | vollständiger, atomarer Desk-/Geräte-Status | Profil, Fähigkeiten, Höhe/Einheit/Qualität, Bewegung, Sperre, Fehler, Sequenznummer |
+| `GET /api/v1/capabilities` | vom aktiven Profil erlaubte Funktionen | verhindert unzulässige UI-/Client-Befehle |
+| `POST /api/v1/commands/move` | `up`, `down`, `stop`; Startbefehle enthalten eine Ablaufzeit | `202` mit Befehls-ID, niemals stilles Fahren |
+| `POST /api/v1/commands/height` | Zielhöhe in profilierter Einheit | `409/422`, wenn Höhe/Positionierung nicht unterstützt oder Zustand unsicher |
+| `POST /api/v1/commands/preset/{id}` | profilierte gespeicherte Position | `202` mit Befehls-ID |
+| `PUT /api/v1/child-lock` | Sperre setzen/lösen, nur bei Profilfähigkeit | bestätigter bzw. abgelehnter Status |
+| `GET /api/v1/commands/{id}` | Annahme, Fortschritt, Controller-Bestätigung/Timeout | nachverfolgbarer Ausgang |
+
+`POST`-Nutzlasten enthalten `request_id` und optional eine erwartete Zustandssequenz; identische IDs sind idempotent, veraltete Zustände werden abgelehnt. Eingaben werden begrenzt und profiliert validiert. „go to height“ ist kein zeitbasierter Blindlauf: Es ist nur verfügbar, wenn das Upstream-Profil eine zuverlässige Höhenrückmeldung und Zielhöhen-Logik bietet. Die API gibt die letzte bekannte Höhe zusammen mit `known`, `stale` oder `unknown` aus.
+
+Die Erstkonfiguration erzwingt ein lokales Gerätepasswort bzw. einen Einmal-Pairing-Code und erstellt danach einen separat widerrufbaren API-Token. Browserzugriffe nutzen sichere Session-Cookies, CSRF-Schutz und Same-Origin-Prüfung; Automationen verwenden Bearer-Token. Die Firmware akzeptiert keine Steuerung ohne Authentifizierung, erlaubt keine CORS-Freigabe per Standard und protokolliert niemals Tokens oder MQTT-Passwörter. Für externen Zugriff wird ein vorhandener VPN/Reverse Proxy empfohlen; unverschlüsseltes Geräte-HTTP wird nicht direkt ins Internet exponiert.
+
+## 3.4 Home Assistant über MQTT
+
+PandaDesk integriert sich ohne eigene Home-Assistant-Custom-Integration über MQTT Device Discovery. Die Konfiguration veröffentlicht ein Gerät mit stabiler `device.identifier` aus der ESP-MAC/Serienkennung und stabilen Entity-`unique_id`s. Discovery-Konfigurationen werden retained veröffentlicht und bei HA-Birth auf `homeassistant/status` erneut gesendet; Verfügbarkeit nutzt MQTT Last-Will/Birth auf `pandadesk/<device-id>/availability`. Bewegungsbefehle werden immer mit `retain=false` publiziert bzw. verarbeitet, damit kein alter Auf-/Ab-Befehl nach Broker-Neustart fährt.
+
+| HA-Entität | MQTT-Rolle | Nur wenn Profil dies kann |
+|---|---|---|
+| `cover.pandadesk` | `OPEN` = auf, `CLOSE` = ab, `STOP`; Bewegungs-/Positionsstatus | Auf/Ab/Stop |
+| `sensor.pandadesk_height` | aktuelle Höhe mit Einheit und Datenqualität | Höhenrückmeldung |
+| `number.pandadesk_target_height` | Zielhöhe setzen, bestätigt erst über Status | zuverlässige Zielhöhensteuerung |
+| `switch.pandadesk_child_lock` | Kindersperre mit tatsächlichem State-Topic | Kindersperre |
+| `button.pandadesk_preset_1…4` | gespeicherte Position auslösen | jeweilige Presets |
+| `sensor.pandadesk_fault` / `binary_sensor.pandadesk_ready` | Fehler und sichere Betriebsbereitschaft | immer |
+
+Der Namensraum ist `pandadesk/<device-id>/…`, beispielsweise `state`, `availability`, `command/cover`, `command/target-height`, `command/child-lock` und `event`. Befehle tragen eine `request_id`; die Verarbeitung übersetzt sie in den gemeinsamen Intent-Typ und veröffentlicht Ergebnis, Fehlercode und Zustandssequenz auf `event`/`state`. Der MQTT-Client darf keine Bewegung bestätigen, bevor die profilierte Controller-Antwort bzw. der sichere Timeout vorliegt. Zustände dürfen retained sein, erhalten aber Zeitstempel und Qualitätsstatus; ein nach Neustart wiederhergestellter retained Zustand wird nicht als aktuelle Tischwahrheit verwendet, bis das Profil ihn aktualisiert hat.
+
+Brokeradresse, Port, TLS-Modus, CA-Zertifikat/Fingerprint, Benutzer und Passwort sind konfigurierbar und secrets-geschützt in NVS abgelegt. V1 unterstützt einen Broker und authentifiziert ihn; bei fehlendem Broker, WLAN-Ausfall oder HA-Neustart läuft der lokale Desk-/Handset-Pfad weiter. MQTT-Reconnect und Discovery dürfen weder die UART-Aufgaben noch den Sender blockieren.
 
 ## 4. Laufzeitarchitektur
 
@@ -74,7 +115,8 @@ NVS enthält nur Nutzerkonfiguration (aktives Profil, Betriebsmodus, zulässige 
 | `handset_rx_task` | Bytes von GPIO5, Zeitstempel, Handset-Parser | Nein |
 | `desk_state_task` | Profilzustand, Wake, Antworten, Freigaben und Fehlerreaktion | Nur durch Anforderung an Arbiter |
 | `tx_arbiter_task` | eine FIFO, vollständige Frames, Priorität und UART19 | **Ja, exklusiv** |
-| `api_task` | Nutzer-/Netzwerkbefehle in geprüfte Intent-Objekte wandeln | Nein |
+| `api_task` | HTTP/WebSocket/UI-Befehle authentifizieren und in geprüfte Intents wandeln | Nein |
+| `mqtt_task` | HA Discovery, MQTT-Status und MQTT-Intents | Nein |
 | `diagnostics_task` | USB-CDC-Logs, Metriken und Testtracing | Nein |
 
 Beide RX-Aufgaben lesen ohne Netzwerkzugriffe aus getrennten ESP-IDF-UART-Instanzen bzw. validierter GPIO-Matrix-Zuordnung. `E_TX` wird nur vom exklusiven Sender angehängt. Vor der ersten Implementierung ist auf echter C6-Hardware nachzuweisen, welche UART-Controller/Matrix-Routen gleichzeitig GPIO18/19 und GPIO5 mit dem gewählten ESP-IDF bereitstellen; UART0 bleibt im Flash-/ROM- und ggf. Diagnosepfad. Eine Software-UART ist kein Produktionsfallback.
@@ -160,8 +202,8 @@ Ein Profil wechselt von `experimental` nach `supported` nur mit einem festgeschr
 | 3 | UART-Transport | zwei gleichzeitige RX-Pfade und exklusiver TX, Ringpuffer/Fehlerzähler, Loopback-/Logic-Analyzer-Test; GPIO-Matrix validiert |
 | 4 | Frame-/Arbiterkern | Replay-Tests für Fragmentierung, Timeout, Overflow, Priorität und keine Bytevermischung; Controller-Antworten werden nicht gesendet |
 | 5 | Erstes Referenzprofil | Upstream-basierte Portierung von Parser-/Wake-/Stop-Modell, zunächst ohne WLAN/API; echte Inline-Handset-Weiterleitung bestanden |
-| 6 | Steuer-API und Persistenz | authentifizierte, minimale lokale Steuerung; NVS-Migration, Rate-Limits und Freigabe für Bewegungsbefehle |
-| 7 | Netzwerk und OTA | Wi-Fi/BLE nur getrennt vom Transport; OTA ausschließlich in verifiziertem Stillstand, danach Safe-Start und Konfigurationsprüfung |
+| 6 | Steuer-API, Web UI und Persistenz | OpenAPI-Vertrag, Authentifizierung, WebSocket-Status, eingebettete UI; NVS-Migration, Rate-Limits und Freigabe für Bewegungsbefehle |
+| 7 | MQTT/HA, Netzwerk und OTA | MQTT Device Discovery und Entitäten aus Fähigkeiten ableiten; Wi-Fi/BLE getrennt vom Transport; OTA ausschließlich in verifiziertem Stillstand, danach Safe-Start und Konfigurationsprüfung |
 | 8 | Familienerweiterung | je neues Profil vollständige Qualifizierung, erst dann Aktivierung in Release |
 | 9 | Release-Härtung | Langzeittest, Fehlereinbringung, Strom-/Thermik-/USB-Tests, Signierung/Versionierung, Recovery-Anleitung |
 
@@ -174,6 +216,9 @@ Die Phasen 5–9 werden nicht mit geratenen oder simulierten Protokollwerten abg
 - Host/Unity-Tests für Framegrenzen, Checksummen, Parser-Resync, Timeout und TX-Priorität.
 - Synthetische Replays aus den festgeschriebenen Upstream-Framevektoren mit Fragmentierung an jeder Byteposition, beschädigten Frames und langen Pausen.
 - Tests, dass ein Controller-Frame nie eine TX-Anforderung erzeugt und dass abgelaufene Bewegungsframes verworfen werden.
+- API-Vertragstests für Authentifizierung, CSRF, Idempotenz, Sequenzkonflikte, Eingabegrenzen, Fähigkeits-Gates und Antwortcodes.
+- UI-End-to-End-Tests: keine Steuerfunktion ohne Fähigkeit/Anmeldung; WebSocket-Status und Reconnect stimmen mit `GET /state` überein.
+- MQTT-Tests mit lokalem Broker: Discovery/Unique-IDs, HA-Birth-Neuveröffentlichung, LWT-Verfügbarkeit, nicht-retained Bewegungsbefehle, JSON-Validierung und identische API-/MQTT-Arbitrierung.
 - Build-Matrix mindestens `pandadesk-c6` und C6-Entwicklungsboard; `pio run`, Unit Tests, Format-/statische Analyse sowie Größenbudget.
 - Profil-Validator: eindeutige IDs, gültige UART-Parameter, Limits, sichere Stopdefinition und vorhandene Testdokumentation.
 
@@ -184,14 +229,15 @@ Die Phasen 5–9 werden nicht mit geratenen oder simulierten Protokollwerten abg
 3. Mit Logic Analyzer: Idle/OE-/Wake-/HS-Pegel, beide UART-Richtungen, Frame-Integrität und Weiterleitungslatenz messen.
 4. Mit echtem Referenzmodell: Start, Schlaf/Wake, erster Tastendruck, langes Halten, Richtungswechsel und Stop.
 5. Gleichzeitige Handset- und PandaDesk-Befehle: Vorrang, keine vermischten Frames, keine unzulässigen Controllerantworten am Handset.
-6. Fehler: Kabelabzug, USB-Wechsel, Brownout, Reset, RX-Overflow, Framingfehler, WLAN-Ausfall und Watchdog; anschließend keine alte Bewegung.
-7. OTA nur im Stillstand; danach Handset-/Profilzustand, Safe-Start und Recovery bestätigen.
+6. API/Web UI/MQTT: Authentifizierung, abgelehnte nicht unterstützte Befehle, Zeitablauf einer Bewegungsanfrage, parallele Quellen, Broker-/WLAN-Ausfall und Wiederverbindung; anschließend keine alte Bewegung.
+7. Fehler: Kabelabzug, USB-Wechsel, Brownout, Reset, RX-Overflow, Framingfehler und Watchdog; anschließend keine alte Bewegung.
+8. OTA nur im Stillstand; danach Handset-/Profilzustand, Safe-Start und Recovery bestätigen.
 
 Für jeden Testlauf liegen in `docs/compatibility/<profile-id>/` mindestens Identifikationen, Platinenversion, Firmware-Commit, verwendeter Upstream-Commit, Versorgung/Last, Messmittel, erwartetes Ergebnis, Ist-Ergebnis und Freigabeentscheidung vor. Personen-/Sicherheitsrisiken beim Bewegungstest werden durch freie Umgebung und eine unabhängige Stopmöglichkeit kontrolliert.
 
 ## 8. Release-, Diagnose- und Betriebsregeln
 
-Native USB-CDC ist Standard für strukturierte Diagnose. Serial-Log-Ausgaben auf UART0 oder GPIO19 werden vor Aktivierung am Tisch geprüft und dürfen nie auf `E_TX` routbar sein. Diagnose zeigt Zustandsautomat, Profil-ID/-Version, RX/TX-Zähler, Overflow/Framingfehler, Wake-Versuche und abgelaufene Befehle, aber keine Zugangsdaten oder kompletten sensitiven Netzwerkinhalt.
+Native USB-CDC ist Standard für strukturierte Diagnose. Serial-Log-Ausgaben auf UART0 oder GPIO19 werden vor Aktivierung am Tisch geprüft und dürfen nie auf `E_TX` routbar sein. Diagnose zeigt Zustandsautomat, Profil-ID/-Version, RX/TX-Zähler, Overflow/Framingfehler, Wake-Versuche, abgelaufene Befehle sowie API-/MQTT-Verbindungsstatus, aber keine Zugangsdaten oder kompletten sensitiven Netzwerkinhalt.
 
 Ein Release enthält Firmwareversion, Plattform-/ESP-IDF-Version, Profilmanifest, Kompatibilitätsliste, bekannte Grenzen und Rollback-/Recovery-Anleitung. OTA ist nur erlaubt, wenn das Profil einen Stillstand bestätigt, keine Bewegung angefordert ist und der Sender leer ist. Nach Update oder jeder Konfigurationsmigration beginnt die Firmware wieder in BOOT_SAFE.
 
@@ -206,8 +252,11 @@ Ein Release enthält Firmwareversion, Plattform-/ESP-IDF-Version, Profilmanifest
 | Fehlendes passives Bypass | Reset unterbricht Bedienung | Watchdog, kurze Safe-Startzeit, UX-/Installationshinweis; Hardware V2 separat bewerten |
 | Kein passender, belastbarer ESP-Upstream für einen Controller | falsche Bewegung/Stop | kein Profil und keine heuristische Erkennung; erst nach einer separat belegten Quellimplementierung wieder bewerten |
 | OTA während Bewegung | Bedien-/Sicherheitslücke | Stillstands-Gate, Sender leer, danach BOOT_SAFE |
+| Web/API/MQTT umgeht Transportkern | konkurrierende oder unsichere Bewegung | alle Eingänge erzeugen denselben validierten Intent und warten auf dieselbe Statusrückmeldung |
+| Retained MQTT-Bewegungsbefehl | Fahrt nach Reconnect | Bewegungs- und Preset-Topics nie retained; Ablaufzeit und Request-ID erzwingen |
+| Unzuverlässige Höhe | falsche Zielposition | Höhe mit Qualitätsstatus; Zielhöhe nur als Profilfähigkeit und nie aus altem retained Zustand |
 
-Vor Beginn von Phase 5 werden drei Projektentscheidungen festgehalten: das erste reale Referenzmodell, die gewünschte lokale Steueroberfläche (z. B. REST/MQTT/BLE) und der Sicherheits-/Authentifizierungsumfang. Diese Entscheidungen dürfen den Transportkern nicht umgehen oder dessen Prioritätsregeln verändern.
+Vor Beginn von Phase 5 werden drei Projektentscheidungen festgehalten: das erste reale Referenzmodell, die konkrete Web-UI-/API-Ausgestaltung innerhalb dieses Vertrags und der Sicherheits-/Authentifizierungsumfang. Web UI, REST/WebSocket und Home-Assistant-MQTT sind bereits Projektumfang; BLE-Steuerung bleibt eine optionale spätere Erweiterung. Keine dieser Entscheidungen darf den Transportkern umgehen oder dessen Prioritätsregeln verändern.
 
 ## 10. Konkrete erste Arbeitsliste
 
@@ -217,8 +266,9 @@ Vor Beginn von Phase 5 werden drei Projektentscheidungen festgehalten: das erste
 4. Gleichzeitig laufende RX-Pfade GPIO18/GPIO5 plus TX GPIO19 auf der tatsächlichen C6-Platine verifizieren und dokumentieren.
 5. Die oben genannten GitHub-Quellen auf konkrete, lizenzrechtlich verwendbare Commit-IDs festschreiben und daraus Parser-/Wake-/Befehlsvektoren als Tests ableiten.
 6. TX-Arbiter, Parser-Schnittstelle und Replay-Testharness implementieren, bevor irgendein Fahrbefehl implementiert wird.
-7. Einen zur Quellimplementierung passenden Tisch/Controller/Handset-Satz auswählen und das portierte Profil zunächst im überwachten Laborbetrieb gegen die Testmatrix qualifizieren; erst danach Netzwerksteuerung und weitere Profile ergänzen.
+7. OpenAPI- und MQTT-Discovery-Contract samt UI-Entwurf implementieren; jede Steuerquelle gegen dieselben Intent-/Fähigkeitsprüfungen testen.
+8. Einen zur Quellimplementierung passenden Tisch/Controller/Handset-Satz auswählen und das portierte Profil zunächst im überwachten Laborbetrieb gegen die Testmatrix qualifizieren; erst danach Netzwerksteuerung und weitere Profile ergänzen.
 
 ## Quellenbasis
 
-Die Verdrahtung und funktionalen Grenzen dieses Plans stammen aus `PandaDesk_Projektzusammenfassung.md` und dem Schaltplanexport im Repository. Die Protokoll-/Wake-Grundlage sind [Rocka84/esphome_components](https://github.com/Rocka84/esphome_components/tree/master/components/jiecang_desk_controller), [phord/Jarvis](https://github.com/phord/Jarvis), [dimitri-vs/flexispot-esphome](https://github.com/dimitri-vs/flexispot-esphome) und [iMicknl/LoctekMotion_IoT](https://github.com/iMicknl/LoctekMotion_IoT); vor Implementierung werden deren exakte Commits und Lizenzen festgeschrieben. Für die Umsetzung sind zusätzlich die jeweils zur gepinnten Toolchain passenden offiziellen Dokumentationen von [PlatformIO Espressif32](https://docs.platformio.org/en/latest/platforms/espressif32.html), [PlatformIO ESP-IDF](https://docs.platformio.org/en/latest/frameworks/espidf.html) und [ESP-IDF für ESP32-C6](https://docs.espressif.com/projects/esp-idf/en/latest/esp32c6/) heranzuziehen. Bei einem Konflikt zwischen externem Quellprojekt und der festen V1-Verdrahtung hat PandaDesk-Hardware Vorrang; das betroffene Profil bleibt bis zur geklärten Portierung gesperrt.
+Die Verdrahtung und funktionalen Grenzen dieses Plans stammen aus `PandaDesk_Projektzusammenfassung.md` und dem Schaltplanexport im Repository. Die Protokoll-/Wake-Grundlage sind [Rocka84/esphome_components](https://github.com/Rocka84/esphome_components/tree/master/components/jiecang_desk_controller), [phord/Jarvis](https://github.com/phord/Jarvis), [dimitri-vs/flexispot-esphome](https://github.com/dimitri-vs/flexispot-esphome) und [iMicknl/LoctekMotion_IoT](https://github.com/iMicknl/LoctekMotion_IoT); vor Implementierung werden deren exakte Commits und Lizenzen festgeschrieben. Die Home-Assistant-Anbindung richtet sich nach der offiziellen [MQTT Discovery](https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery)-Dokumentation und der [MQTT-Cover-Spezifikation](https://www.home-assistant.io/integrations/cover.mqtt/). Für die Umsetzung sind zusätzlich die jeweils zur gepinnten Toolchain passenden offiziellen Dokumentationen von [PlatformIO Espressif32](https://docs.platformio.org/en/latest/platforms/espressif32.html), [PlatformIO ESP-IDF](https://docs.platformio.org/en/latest/frameworks/espidf.html) und [ESP-IDF für ESP32-C6](https://docs.espressif.com/projects/esp-idf/en/latest/esp32c6/) heranzuziehen. Bei einem Konflikt zwischen externem Quellprojekt und der festen V1-Verdrahtung hat PandaDesk-Hardware Vorrang; das betroffene Profil bleibt bis zur geklärten Portierung gesperrt.
