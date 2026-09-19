@@ -190,4 +190,12 @@ Please avoid publishing unverified pinouts as working configurations. Include me
 
 ## License
 
-No license has been selected yet. Until a license file is added, the repository contents remain under the copyright of their respective author and are not automatically licensed for reuse, modification, or redistribution.
+PandaDesk is licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](LICENSE).
+
+You may copy, redistribute, and adapt the project for noncommercial purposes provided that you:
+
+- Give appropriate credit to **derDeno / PandaDesk** and link to this repository
+- Link to the CC BY-NC-SA 4.0 license and indicate whether changes were made
+- Publish adaptations under the same CC BY-NC-SA 4.0 license
+
+Commercial use is not permitted under this license. Contact the project owner if you require separate commercial permission.
