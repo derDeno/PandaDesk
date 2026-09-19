@@ -136,18 +136,8 @@ A desk exposing a 5 V pin does not necessarily provide enough current for PandaD
 
 The board uses fixed 3.3 V / nominal 5 V interface circuitry. It is not a universal voltage-detection or arbitrary-pin-routing device.
 
-## Hardware files
 
-| File | Contents |
-|---|---|
-| [`ProPrj.epro2`](ProPrj.epro2) | EasyEDA Pro schematic, PCB, and embedded libraries |
-| [`SCH.pdf`](SCH.pdf) | Schematic export |
-| [`Gerber.zip`](Gerber.zip) | PCB manufacturing files |
-| [`BOM.xlsx`](BOM.xlsx) | Bill of materials |
-| [`PickAndPlace.xlsx`](PickAndPlace.xlsx) | Component placement data |
-| [`PandaDesk_Projektzusammenfassung.md`](PandaDesk_Projektzusammenfassung.md) | Detailed German engineering notes and firmware requirements |
-
-PCB renders:
+## PCB renders:
 
 | Top | Bottom |
 |---|---|
