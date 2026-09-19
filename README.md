@@ -143,28 +143,6 @@ The board uses fixed 3.3 V / nominal 5 V interface circuitry. It is not a univer
 |---|---|
 | ![PandaDesk top](rendering/top.png) | ![PandaDesk bottom](rendering/bottom.png) |
 
-## Current status
-
-The schematic, PCB, BOM, placement file, and Gerbers have received an initial cross-check. Component references and placement data are consistent, and an approximate four-layer connectivity check found no obvious opens or shorts.
-
-The following items remain before the first prototype order:
-
-- Add LCSC part number `C5736265` to the U1 BOM entry or map the exact ESP32-C6-MINI-1-N4 during assembly setup.
-- Resolve or explicitly approve the two vias inside the U2 exposed solder pad.
-- Confirm that duplicate via coordinates in the general PTH and separate via drill files are processed once by CAM.
-- Verify all connectors and the mixed-technology USB-C receptacle in the assembly preview.
-- Run native EasyEDA ERC/DRC and regenerate all outputs from the same project revision.
-- Preferably shorten and widen the U2–L1–C1 regulator output path.
-
-The first build should be a small prototype batch followed by power, USB-priority, UART-forwarding, wake, fault-recovery, and real-desk tests.
-
-## Repository
-
-Project development and releases:
-
-**<https://github.com/derDeno/PandaDesk>**
-
-Issues and test reports should identify the desk model, controller model, handset model, connector, measured voltage, and firmware profile used. Do not report a desk as compatible based only on its connector or brand.
 
 ## Contributing
 
