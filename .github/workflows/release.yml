@@ -1,0 +1,60 @@
+name: Firmware release
+
+on:
+  pull_request:
+    branches: [main]
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'dev' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Read versions and build images
+        shell: bash
+        run: |
+          set -euo pipefail
+          firmware_version="$(tr -d '\r\n' < firmware/version.txt)"
+          filesystem_version="$(tr -d '\r\n' < firmware/data/version.txt)"
+          version_pattern='^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$'
+          [[ "$firmware_version" =~ $version_pattern ]]
+          [[ "$filesystem_version" =~ $version_pattern ]]
+          echo "firmware_version=$firmware_version" >> "$GITHUB_ENV"
+          echo "filesystem_version=$filesystem_version" >> "$GITHUB_ENV"
+
+          pio run -d . -e pandadesk-c6
+          pio run -d . -e pandadesk-c6 -t buildfs
+
+          mkdir -p release-assets
+          build_dir=.pio/build/pandadesk-c6
+          pio pkg exec -p tool-esptoolpy -- esptool.py --chip esp32c6 merge_bin \
+            --flash_mode dio --flash_size 4MB --fill-flash-size 4MB \
+            -o "release-assets/PandaDesk_full_v${firmware_version}.bin" \
+            0x0 "$build_dir/bootloader.bin" \
+            0x8000 "$build_dir/partitions.bin" \
+            0xf000 "$build_dir/ota_data_initial.bin" \
+            0x20000 "$build_dir/firmware.bin" \
+            0x360000 "$build_dir/littlefs.bin"
+          cp "$build_dir/firmware.bin" "release-assets/PandaDesk_firmware_v${firmware_version}.bin"
+          cp "$build_dir/littlefs.bin" "release-assets/PandaDesk_filesystem_v${filesystem_version}.bin"
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.firmware_version }}
+          name: PandaDesk v${{ env.firmware_version }}
+          draft: true
+          generate_release_notes: true
+          files: release-assets/*.bin

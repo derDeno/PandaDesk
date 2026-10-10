@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <title>PandaDesk</title>
+  <style>
+    :root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;color:#eef2f7;background:#111827;font-synthesis:none}
+    *{box-sizing:border-box}body{min-height:100vh;max-width:1000px;margin:0 auto;padding:24px;display:flex;flex-direction:column}
+    h1,h2,h3,p{margin-top:0}h1{font-size:1.8rem;margin-bottom:2px}h2{font-size:1.1rem;margin-bottom:14px}h3{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin:0 0 8px}
+    .header{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}.brand{display:flex;align-items:center}.muted{color:#abb6c5}
+    .nav{display:flex;gap:5px}.nav a{color:#cbd5e1;text-decoration:none;border-radius:7px;padding:7px 12px}.nav a:hover{background:#334155}.nav a[aria-current="page"]{background:#334155;color:#fff}.nav a:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{min-width:0;background:#1f2937;border:1px solid #374151;border-radius:14px;padding:20px}
+    .state-banner{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;background:#392d16;border:1px solid #8b641d;color:#fde68a;margin:0}.state-symbol{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:#fbbf24;color:#111827;font-weight:800}.state-banner strong{display:block;color:#fef3c7}.state-banner p{margin:2px 0 0;color:#e5d4aa;font-size:.92rem}
+    .settings-card{grid-column:1/-1}.settings-details summary{display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;list-style:none;font-size:1.1rem;font-weight:700}.settings-details summary::-webkit-details-marker{display:none}.settings-details summary:focus-visible{outline:3px solid #60a5fa;outline-offset:4px;border-radius:4px}.expand-icon{width:10px;height:10px;flex:none;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease}.settings-details[open] .expand-icon{transform:rotate(45deg)}.settings-content{margin-top:18px}
+    .details{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 12px;margin:0}.details dt{color:#abb6c5}.details dd{margin:0;overflow-wrap:anywhere}
+    .wifi-form{display:grid;gap:14px;width:100%}.wifi-field{display:grid;gap:6px;font-weight:600}.wifi-field input:not([type="range"]),.wifi-field select{width:100%;font:inherit;color:inherit;border:1px solid #4b5563;border-radius:8px;padding:10px 12px;background:#111827}.wifi-field input:focus-visible,.wifi-field select:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}.wifi-field input[type="range"]{width:100%;margin:8px 0 14px;accent-color:#3b82f6}.wifi-field>span{display:flex;justify-content:flex-start;align-items:center;gap:6px}.range-value{font-weight:400;color:#abb6c5}.wifi-note{margin:0;font-size:.85rem}#mqtt-fields:not([hidden]){display:grid;gap:14px}.wifi-form>button{width:fit-content;justify-self:start}.wifi-form button[type="submit"]{background:#2563eb;border-color:#3b82f6}.wifi-form button[type="submit"]:hover:not(:disabled){background:#1d4ed8}.danger-button{background:#7f1d1d;border-color:#b91c1c;color:#fee2e2}.danger-button:hover{background:#991b1b}.danger-button:focus-visible{outline-color:#f87171}dialog{max-width:min(440px,calc(100vw - 32px));border:1px solid #4b5563;border-radius:14px;padding:24px;background:#1f2937;color:#eef2f7}dialog::backdrop{background:#0009}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.check-field{display:flex;align-items:center;gap:10px}.check-field input{accent-color:#3b82f6}
+    .wifi-form{display:grid;gap:14px;width:100%}.wifi-field{display:grid;gap:6px;font-weight:600}.wifi-field input:not([type="range"]),.wifi-field select{width:100%;font:inherit;color:inherit;border:1px solid #4b5563;border-radius:8px;padding:10px 12px;background:#111827}.wifi-field input:focus-visible,.wifi-field select:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}.wifi-field input[type="range"]{width:100%;margin:8px 0 14px;accent-color:#3b82f6}.wifi-field>span{display:flex;justify-content:flex-start;align-items:center;gap:6px}.range-value{font-weight:400;color:#abb6c5}.wifi-note{margin:0;font-size:.85rem}#mqtt-fields:not([hidden]){display:grid;gap:14px}.wifi-form>button{width:fit-content;justify-self:start}.wifi-form button[type="submit"]{background:#2563eb;border-color:#3b82f6}.wifi-form button[type="submit"]:hover:not(:disabled),.primary-button:hover:not(:disabled){background:#1d4ed8}.primary-button{background:#2563eb;border-color:#3b82f6}.height-controls{display:grid;gap:10px;margin-top:18px}.target-row{display:flex;align-items:center;gap:10px}.target-row input[type="number"]{flex:1;min-width:0;font:inherit;color:inherit;border:1px solid #4b5563;border-radius:8px;padding:10px 12px;background:#111827}.target-row input:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}.target-row button{min-width:64px}.height-controls input[type="range"]{width:100%;accent-color:#3b82f6}.target-error{margin:0;color:#fca5a5;font-size:.9rem}.danger-button{background:#7f1d1d;border-color:#b91c1c;color:#fee2e2}.danger-button:hover{background:#991b1b}.danger-button:focus-visible{outline-color:#f87171}dialog{max-width:min(440px,calc(100vw - 32px));border:1px solid #4b5563;border-radius:14px;padding:24px;background:#1f2937;color:#eef2f7}dialog::backdrop{background:#0009}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.check-field{display:flex;align-items:center;gap:10px}.check-field input{accent-color:#3b82f6}
+    .controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.control-tooltip{position:relative;display:block}.controls button,button{font:inherit;color:inherit;border:1px solid #4b5563;border-radius:9px;padding:11px;background:#334155}.controls button{width:100%}button:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}button:disabled{opacity:.45;cursor:not-allowed}.controls button:not(:disabled){cursor:pointer}.controls button:not(:disabled):hover{background:#475569}.control-tooltip::after{content:attr(data-tooltip);position:absolute;z-index:2;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);width:max-content;max-width:min(260px,80vw);padding:8px 10px;border:1px solid #4b5563;border-radius:7px;background:#111827;color:#eef2f7;font-size:.82rem;line-height:1.35;text-align:center;box-shadow:0 4px 14px #0005;opacity:0;visibility:hidden;pointer-events:none}.control-tooltip:hover::after,.control-tooltip:focus-within::after{opacity:1;visibility:visible}.help{margin:12px 0 0;font-size:.9rem}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .api-card{grid-column:1/-1}.api-endpoint{display:flex;align-items:center;gap:10px;margin-bottom:14px}.api-endpoint code{overflow-wrap:anywhere;color:#c4b5fd}.api-method{flex:none;padding:3px 8px;border-radius:6px;background:#111827;color:#93c5fd;font-size:.8rem;font-weight:700}.api-content{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.api-content h3{margin-bottom:6px}.api-content pre{overflow:auto;margin:0;padding:12px;border:1px solid #374151;border-radius:8px;background:#111827;color:#d1d5db;font:.82rem/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}.api-note{grid-column:1/-1;margin:0;color:#abb6c5;font-size:.9rem}
+    main{flex:1}.footer{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:auto;padding-top:18px;color:#7f8b9c;font-size:.85rem}.repo-link{display:inline-flex;align-items:center;gap:6px;color:#abb6c5;text-decoration:none}.repo-link:hover{color:#fff}.repo-link:focus-visible{outline:3px solid #60a5fa;outline-offset:3px;border-radius:3px}.repo-link svg{width:16px;height:16px;fill:currentColor}
+    @media(max-width:680px){body{padding:16px}.grid,.api-content{grid-template-columns:1fr}.header{align-items:flex-start;flex-direction:column}.details{grid-template-columns:120px minmax(0,1fr)}}
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="brand"><h1>PandaDesk</h1></div>
+    <nav class="nav" aria-label="Main menu"><a href="#home" data-page="home" aria-current="page">Home</a><a href="#api" data-page="api">API</a><a href="#settings" data-page="settings">Settings</a></nav>
+  </header>
+
+  <main id="home-page">
+    <div class="grid">
+      <div class="state-banner" role="status" aria-live="polite">
+        <div class="state-symbol" aria-hidden="true">!</div>
+        <div><strong id="state-label">Safe, not configured</strong><p id="state-message">Waiting for device status…</p></div>
+      </div>
+      <section class="card">
+        <h2>Desk status</h2>
+        <dl class="details">
+          <dt>Desk profile</dt><dd id="profile">—</dd>
+          <dt>Height</dt><dd id="height">—</dd>
+          <dt>Movement</dt><dd id="movement">—</dd>
+          <dt>Child lock</dt><dd id="locked">—</dd>
+          <dt>State sequence</dt><dd id="sequence">—</dd>
+        </dl>
+      </section>
+
+      <section class="card">
+        <h2>Desk controls</h2>
+        <div class="controls" aria-label="Desk movement controls">
+          <span class="control-tooltip" data-tooltip="Controls unlock when a qualified desk profile and command transport are available."><button type="button" data-direction="up" aria-describedby="control-help" disabled>Up</button></span>
+          <span class="control-tooltip" data-tooltip="Controls unlock when a qualified desk profile and command transport are available."><button type="button" data-direction="stop" aria-describedby="control-help" disabled>Stop</button></span>
+          <span class="control-tooltip" data-tooltip="Controls unlock when a qualified desk profile and command transport are available."><button type="button" data-direction="down" aria-describedby="control-help" disabled>Down</button></span>
+        </div>
+        <div class="height-controls">
+          <label class="wifi-field" for="target-height-input">Move to height (cm)</label>
+          <div class="target-row">
+            <input id="target-height-input" type="number" min="60.0" max="125.0" step="0.1" value="60.0" aria-describedby="target-height-error" disabled>
+            <button id="target-go" class="primary-button" type="button" disabled>Go</button>
+          </div>
+          <label class="sr-only" for="target-height-slider">Target height slider</label>
+          <input id="target-height-slider" type="range" min="60.0" max="125.0" step="0.1" value="60.0" aria-label="Target height" disabled>
+          <p id="target-height-error" class="target-error" role="alert" hidden></p>
+        </div>
+        <p id="control-help" class="sr-only">Controls unlock when a qualified desk profile and command transport are available.</p>
+        <p id="command-message" class="help" role="status" aria-live="polite"></p>
+      </section>
+
+    </div>
+  </main>
+
+  <main id="settings-page" hidden>
+    <div class="grid">
+      <section class="card settings-card">
+        <details class="settings-details">
+          <summary><span>Device settings</span><span class="expand-icon" aria-hidden="true"></span></summary>
+          <div class="settings-content">
+            <form id="device-form" class="wifi-form">
+              <label class="wifi-field" for="device-hostname">Hostname
+                <input id="device-hostname" name="hostname" type="text" maxlength="63" pattern="[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?" value="pandadesk" required autocomplete="off" spellcheck="false">
+              </label>
+              <p class="wifi-note muted">Used for the device name and its local network address. Changing it restarts the device.</p>
+              <label class="wifi-field" for="led-brightness"><span>Power LED brightness <output id="led-brightness-value" class="range-value" for="led-brightness">100%</output></span>
+                <input id="led-brightness" name="led_brightness" type="range" min="0" max="100" value="100">
+              </label>
+              <button id="device-save" type="submit">Save device settings</button>
+              <p id="device-message" class="help" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </details>
+      </section>
+      <section class="card settings-card">
+        <details class="settings-details">
+          <summary><span>Desk settings</span><span class="expand-icon" aria-hidden="true"></span></summary>
+          <div class="settings-content">
+            <form id="desk-form" class="wifi-form">
+              <label class="wifi-field" for="desk-profile">Desk profile
+                <select id="desk-profile" name="profile">
+                  <option value="">Not configured</option>
+                  <option value="jiecang_rj12">Jiecang RJ12 (unqualified)</option>
+                  <option value="jiecang_jarvis_rj45">Jiecang / Jarvis RJ45 (unqualified)</option>
+                  <option value="loctek_flexispot_rj45">Loctek / FlexiSpot RJ45 (unqualified)</option>
+                </select>
+              </label>
+              <div id="desk-model-field">
+                <label class="wifi-field" for="desk-model">Desk model
+                  <select id="desk-model" name="model" disabled>
+                    <option value="">Select a model</option>
+                  </select>
+                </label>
+                <select id="desk-model-rj12-options" hidden>
+                  <option value="">Select a model</option>
+                    <option value="JCB35M11C">Jiecang JCB35M11C</option>
+<option value="JCHT35K72C">Jiecang JCHT35K72C</option>
+                    <option value="JCB36N2CA">Jiecang JCB36N2CA</option>
+                    <option value="JCB36N2CA-230">Jiecang JCB36N2CA-230</option>
+                    <option value="JCB36N2HAG-230">Jiecang JCB36N2HAG-230</option>
+                    <option value="JCHT35K9-003-v4">Jiecang JCHT35K9-003-v4</option>
+                    <option value="JCB36NE2">Jiecang JCB36NE2</option>
+                    <option value="JCB36M">Jiecang JCB36M</option>
+                    <option value="JCB36NE2A-230">Jiecang JCB36NE2A-230</option>
+                </select>
+                <select id="desk-model-rj45-options" hidden>
+                    <option value="">Select a model</option>
+                    <option value="FullyCB2C-A">FullyCB2C-A (Jarvis)</option>
+                    <option value="JCB35N2" disabled>Jiecang JCB35N2 (not implemented)</option>
+                </select>
+                <select id="desk-model-loctek-options" hidden>
+                  <option value="">Select a model</option>
+                  <option value="FLEXISPOT_E7_PRO_PLUS">FlexiSpot E7 Pro Plus (HS13M-1C0 / CB38M2L)</option>
+                  <option value="FLEXISPOT_E7_PRO" disabled>FlexiSpot E7 Pro (not verified)</option>
+                  <option value="FLEXISPOT_E7" disabled>FlexiSpot E7 (not verified)</option>
+                  <option value="FLEXISPOT_E7Q" disabled>FlexiSpot E7Q (not verified)</option>
+                  <option value="FLEXISPOT_E5" disabled>FlexiSpot E5 (not verified)</option>
+                  <option value="FLEXISPOT_E6" disabled>FlexiSpot E6 (not verified)</option>
+                  <option value="FLEXISPOT_E8" disabled>FlexiSpot E8 (not verified)</option>
+                </select>
+              </div>
+              <label class="wifi-field" for="min-height">Minimum height (cm)<input id="min-height" type="number" min="0" max="200" step="0.1" value="60.0" required></label>
+              <label class="wifi-field" for="max-height">Maximum height (cm)<input id="max-height" type="number" min="0" max="200" step="0.1" value="125.0" required></label>
+              <button id="desk-save" type="submit">Save desk settings</button>
+              <p id="desk-message" class="help" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </details>
+      </section>
+      <section class="card settings-card">
+        <details class="settings-details">
+          <summary><span>Wi-Fi setup</span><span class="expand-icon" aria-hidden="true"></span></summary>
+          <div class="settings-content">
+            <form id="wifi-form" class="wifi-form">
+              <label class="wifi-field" for="wifi-ssid">Network name (SSID)<input id="wifi-ssid" name="ssid" type="text" maxlength="32" autocomplete="ssid" required></label>
+              <label class="wifi-field" for="wifi-password">Password<input id="wifi-password" name="password" type="password" maxlength="63" minlength="8" autocomplete="new-password"></label>
+              <p id="wifi-password-note" class="wifi-note muted">Leave the password blank to connect to an open network. Saved passwords are never shown.</p>
+              <button id="wifi-save" type="submit">Save and reboot</button>
+              <p id="wifi-message" class="help" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </details>
+      </section>
+      <section class="card settings-card">
+        <details class="settings-details">
+          <summary><span>Home Assistant / MQTT</span><span class="expand-icon" aria-hidden="true"></span></summary>
+          <div class="settings-content">
+            <form id="mqtt-form" class="wifi-form">
+              <label class="check-field"><input id="mqtt-enabled" type="checkbox"> Enable MQTT settings</label>
+              <div id="mqtt-fields" hidden>
+                <label class="wifi-field" for="mqtt-host">Broker host<input id="mqtt-host" type="text" maxlength="128" autocomplete="url" disabled></label>
+                <label class="wifi-field" for="mqtt-port">Broker port<input id="mqtt-port" type="number" min="1" max="65535" value="1883" disabled></label>
+                <label class="wifi-field" for="mqtt-username">Username<input id="mqtt-username" type="text" maxlength="64" autocomplete="username" disabled></label>
+                <label class="wifi-field" for="mqtt-password">Password<input id="mqtt-password" type="password" maxlength="63" autocomplete="new-password" disabled></label>
+              </div>
+              <button id="mqtt-save" type="submit">Save MQTT settings</button>
+              <p id="mqtt-message" class="help" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </details>
+      </section>
+      <section class="card settings-card">
+        <details class="settings-details">
+          <summary><span>Firmware update</span><span class="expand-icon" aria-hidden="true"></span></summary>
+          <div class="settings-content">
+            <form id="firmware-form" class="wifi-form">
+              <p class="muted">Firmware version: <span id="firmware-version">—</span><br>Filesystem version: <span id="filesystem-version">—</span></p>
+              <label class="wifi-field" for="firmware-file">PandaDesk firmware image (.bin)<input id="firmware-file" type="file" accept=".bin,application/octet-stream" required></label>
+              <p class="wifi-note muted">Choose a PandaDesk firmware image and select Install. Your saved settings will stay on the device; it will reboot after installation.</p>
+              <button id="firmware-upload" type="submit">Install firmware</button>
+              <p id="firmware-message" class="help" role="status" aria-live="polite"></p>
+            </form>
+            <form id="filesystem-form" class="wifi-form">
+              <label class="wifi-field" for="filesystem-file">PandaDesk filesystem image (.bin)<input id="filesystem-file" type="file" accept=".bin,application/octet-stream" required></label>
+              <p class="wifi-note muted">Choose the LittleFS image built with <code>pio run -e pandadesk-c6 -t buildfs</code>. The device will reboot after installation.</p>
+              <button id="filesystem-upload" type="submit">Install filesystem</button>
+              <p id="filesystem-message" class="help" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </details>
+      </section>
+      <section class="card settings-card">
+        <details class="settings-details">
+          <summary><span>Reset</span><span class="expand-icon" aria-hidden="true"></span></summary>
+          <div class="settings-content">
+            <p class="muted">Reset removes saved Wi-Fi, device, LED, and MQTT settings, then reboots into setup mode.</p>
+            <button id="reset-open" type="button" class="danger-button">Reset device</button>
+            <p id="reset-message" class="help" role="status" aria-live="polite"></p>
+          </div>
+        </details>
+      </section>
+    </div>
+  </main>
+  <main id="api-page" hidden>
+    <div class="grid">
+      <section class="card settings-card api-card"><details class="settings-details"><summary><span>Read device state</span><span class="expand-icon" aria-hidden="true"></span></summary><div class="settings-content">
+        <div class="api-endpoint"><span class="api-method">GET</span><code>/api/v1/state</code></div><div class="api-content"><div><h3>Request</h3><pre>No body</pre></div><div><h3>Response · 200 OK</h3><pre>{
+  "state": "READY",
+  "profile": "jiecang_jarvis_rj45",
+  "ready": true,
+  "height": {
+    "value": null,
+    "quality": "unknown"
+  },
+  "moving": null,
+  "locked": null,
+  "sequence": 1,
+  "firmware_version": "0.1.0",
+  "filesystem_version": "0.1.0"
+}</pre></div></div>
+      </div></details></section>
+      <section class="card settings-card api-card"><details class="settings-details"><summary><span>Read capabilities</span><span class="expand-icon" aria-hidden="true"></span></summary><div class="settings-content">
+        <div class="api-endpoint"><span class="api-method">GET</span><code>/api/v1/capabilities</code></div><div class="api-content"><div><h3>Request</h3><pre>No body</pre></div><div><h3>Response · 200 OK</h3><pre>{
+  "profile_configured": true,
+  "move": true,
+  "stop": true,
+  "target_height": true,
+  "presets": false,
+  "child_lock": false
+}</pre></div></div>
+      </div></details></section>
+      <section class="card settings-card api-card"><details class="settings-details"><summary><span>Move desk up, down, or stop</span><span class="expand-icon" aria-hidden="true"></span></summary><div class="settings-content">
+        <div class="api-endpoint"><span class="api-method">POST</span><code>/api/v1/commands/move</code></div><div class="api-content"><div><h3>Request · application/json</h3><pre>{
+  "request_id": "unique-id",
+  "direction": "up",
+  "expires_ms": 1000
+ }</pre></div><div><h3>Response · 202 Accepted</h3><pre>{
+  "accepted": true
+ }</pre></div><p class="api-note">direction is up, down, or stop. Up/down run for expires_ms (1–5000 ms) and then stop automatically. Stop takes priority over queued API moves.</p></div>
+      </div></details></section>
+      <section class="card settings-card api-card"><details class="settings-details"><summary><span>Move desk to a target height</span><span class="expand-icon" aria-hidden="true"></span></summary><div class="settings-content">
+        <div class="api-endpoint"><span class="api-method">POST</span><code>/api/v1/commands/height</code></div><div class="api-content"><div><h3>Request · application/json</h3><pre>{
+  "request_id": "unique-id",
+  "height_cm": 72.5
+ }</pre></div><div><h3>Response · 202 Accepted</h3><pre>{
+  "accepted": true
+ }</pre></div><p class="api-note">height_cm must have one decimal and be within the saved limits. Out-of-range requests return 400 with height_out_of_range. Target-height control is unavailable for Loctek/FlexiSpot and JCHT35K72C.</p></div>
+      </div></details></section>
+    </div>
+  </main>
+  <dialog id="reset-dialog" aria-labelledby="reset-dialog-title">
+    <form method="dialog">
+      <h2 id="reset-dialog-title">Reset PandaDesk?</h2>
+      <p>This deletes all saved settings and reboots the device. You will need to set up Wi-Fi again.</p>
+      <div class="dialog-actions">
+        <button value="cancel">Cancel</button>
+        <button id="reset-confirm" value="reset" class="danger-button">Reset device</button>
+      </div>
+    </form>
+  </dialog>
+  <footer class="footer">
+    <a class="repo-link" href="https://github.com/derDeno/PandaDesk" target="_blank" rel="noopener noreferrer" aria-label="View PandaDesk on GitHub">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.08c-3.1.67-3.76-1.32-3.76-1.32-.5-1.28-1.24-1.62-1.24-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 .1.76 2.5 3.87 1.78.1-.72.39-1.21.7-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.22 1.15-3-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.15a10.6 10.6 0 0 1 5.55 0c2.12-1.44 3.05-1.15 3.05-1.15.61 1.54.23 2.68.11 2.96.72.78 1.15 1.78 1.15 3 0 4.29-2.61 5.24-5.1 5.51.4.35.75 1.03.75 2.08v3.09c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/></svg>
+      <span>View on GitHub</span>
+    </a>
+  </footer>
+
+  <script>
+    const $ = selector => document.querySelector(selector);
+    const setText = (selector, value) => { $(selector).textContent = value; };
+    function setControlHelp(text) {
+      setText('#control-help', text);
+      document.querySelectorAll('.control-tooltip').forEach(tooltip => { tooltip.dataset.tooltip = text; });
+    }
+
+    async function loadWifiSettings() {
+      try {
+        const response = await fetch('/api/v1/settings/wifi', {cache: 'no-store'});
+        if (!response.ok) throw new Error('Could not load Wi-Fi settings.');
+        const settings = await response.json();
+        $('#wifi-ssid').value = settings.ssid || '';
+        setText('#wifi-password-note', settings.password_configured
+          ? 'A password is saved but never shown. Enter it again to replace it, or leave blank for an open network.'
+          : 'Leave the password blank to connect to an open network.');
+      } catch (error) {
+        if (location.protocol !== 'file:') setText('#wifi-message', error.message);
+      }
+    }
+
+    async function saveWifiSettings(event) {
+      event.preventDefault();
+      const button = $('#wifi-save');
+      button.disabled = true;
+      setText('#wifi-message', 'Saving Wi-Fi settings…');
+      try {
+        const response = await fetch('/api/v1/settings/wifi', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ssid: $('#wifi-ssid').value, password: $('#wifi-password').value})
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error === 'invalid_wifi_settings'
+          ? 'Enter an SSID and a password with at least 8 characters, or leave it blank for an open network.'
+          : 'Could not save Wi-Fi settings.');
+        setText('#wifi-message', 'Settings saved. The device is rebooting; reconnect using the new network details.');
+      } catch (error) {
+        setText('#wifi-message', error.message);
+        button.disabled = false;
+      }
+    }
+
+    async function loadDeviceSettings() {
+      try {
+        const response = await fetch('/api/v1/settings/device', {cache: 'no-store'});
+        if (!response.ok) throw new Error('Could not load device settings.');
+        const settings = await response.json();
+        $('#device-hostname').value = settings.hostname || 'pandadesk';
+        $('#desk-profile').value = settings.profile || '';
+        updateDeskModelField();
+        $('#desk-model').value = settings.model || '';
+        $('#min-height').value = Number(settings.min_height_cm ?? 60).toFixed(1);
+        $('#max-height').value = Number(settings.max_height_cm ?? 125).toFixed(1);
+        setTargetHeightBounds(Number($('#min-height').value), Number($('#max-height').value));
+        $('#led-brightness').value = settings.led_brightness ?? 100;
+        updateLedBrightnessLabel();
+      } catch (error) {
+        if (location.protocol !== 'file:') setText('#device-message', error.message);
+      }
+    }
+
+    function updateDeskModelField() {
+      const profile = $('#desk-profile').value;
+      const model = $('#desk-model');
+      const previous = model.value;
+      const choices = profile === 'jiecang_rj12'
+        ? $('#desk-model-rj12-options').options
+        : profile === 'jiecang_jarvis_rj45' ? $('#desk-model-rj45-options').options
+        : profile === 'loctek_flexispot_rj45' ? $('#desk-model-loctek-options').options : null;
+      model.disabled = !profile;
+      if (choices === null) {
+        model.replaceChildren(new Option('Select a model', ''));
+        return;
+      }
+      const placeholder = new Option('Select a model', '');
+      const options = Array.from(choices).slice(1).map(option => {
+        const copy = new Option(option.text, option.value);
+        copy.disabled = option.disabled;
+        return copy;
+      });
+      model.replaceChildren(placeholder, ...options);
+      model.value = options.some(option => option.value === previous) ? previous : '';
+    }
+
+    function updateLedBrightnessLabel() {
+      const brightness = Number($('#led-brightness').value);
+      $('#led-brightness-value').value = brightness === 0 ? 'Off' : `${brightness}%`;
+      $('#led-brightness-value').textContent = $('#led-brightness-value').value;
+    }
+
+    function setTargetHeightBounds(min, max) {
+      for (const selector of ['#target-height-input', '#target-height-slider']) {
+        $(selector).min = min.toFixed(1);
+        $(selector).max = max.toFixed(1);
+      }
+      let value = Number($('#target-height-input').value);
+      if (!Number.isFinite(value) || value < min || value > max) value = min;
+      $('#target-height-input').value = value.toFixed(1);
+      $('#target-height-slider').value = value.toFixed(1);
+      setText('#target-height-error', '');
+      $('#target-height-error').hidden = true;
+    }
+
+    function showTargetHeightError() {
+      const min = Number($('#target-height-input').min);
+      const max = Number($('#target-height-input').max);
+      setText('#target-height-error', `Enter a height from ${min.toFixed(1)} to ${max.toFixed(1)} cm using one decimal place.`);
+      $('#target-height-error').hidden = false;
+    }
+
+    function syncTargetInputToSlider() {
+      const input = $('#target-height-input');
+      const value = Number(input.value);
+      if (input.value === '' || !Number.isFinite(value) || value < Number(input.min) || value > Number(input.max) ||
+          Math.abs(value * 10 - Math.round(value * 10)) > 1e-7) {
+        showTargetHeightError();
+        return false;
+      }
+      $('#target-height-slider').value = value;
+      setText('#target-height-error', '');
+      $('#target-height-error').hidden = true;
+      return true;
+    }
+
+    function syncTargetSliderToInput() {
+      $('#target-height-input').value = Number($('#target-height-slider').value).toFixed(1);
+      setText('#target-height-error', '');
+      $('#target-height-error').hidden = true;
+    }
+
+    function setTargetControlsEnabled(canSelect, canMove) {
+      $('#target-height-input').disabled = !canSelect;
+      $('#target-height-slider').disabled = !canSelect;
+      $('#target-go').disabled = !canMove;
+    }
+
+    async function saveDeviceSettings(event) {
+      event.preventDefault();
+      const button = $('#device-save');
+      const hostname = $('#device-hostname').value.trim();
+      if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(hostname)) {
+        setText('#device-message', 'Use 1–63 letters, numbers, or hyphens; the hostname cannot start or end with a hyphen.');
+        return;
+      }
+      button.disabled = true;
+      setText('#device-message', 'Saving settings…');
+      try {
+        const response = await fetch('/api/v1/settings/device', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({hostname, led_brightness: Number($('#led-brightness').value)})
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error('Could not save device settings.');
+        setText('#device-message', result.rebooting
+          ? 'Hostname saved. The device is restarting; reconnect using the new hostname.'
+          : 'Device settings saved.');
+      } catch (error) {
+        setText('#device-message', error.message);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function saveDeskSettings(event) {
+      event.preventDefault();
+      const button = $('#desk-save');
+      const minHeight = Number($('#min-height').value);
+      const maxHeight = Number($('#max-height').value);
+      if (!Number.isFinite(minHeight) || !Number.isFinite(maxHeight) || minHeight < 0 || maxHeight > 200 ||
+          minHeight >= maxHeight || Math.abs(minHeight * 10 - Math.round(minHeight * 10)) > 1e-7 ||
+          Math.abs(maxHeight * 10 - Math.round(maxHeight * 10)) > 1e-7) {
+        setText('#desk-message', 'Enter minimum and maximum heights with one decimal; the minimum must be lower.');
+        return;
+      }
+      button.disabled = true;
+      setText('#desk-message', 'Saving settings…');
+      try {
+        const response = await fetch('/api/v1/settings/device', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            profile: $('#desk-profile').value,
+            model: $('#desk-model').value,
+            min_height_cm: minHeight,
+            max_height_cm: maxHeight
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error === 'invalid_device_settings' ? 'Check the desk profile, model, and height limits.' : 'Could not save desk settings.');
+        setTargetHeightBounds(minHeight, maxHeight);
+        setText('#desk-message', 'Desk settings saved.');
+      } catch (error) {
+        setText('#desk-message', error.message);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function loadMqttSettings() {
+      try {
+        const response = await fetch('/api/v1/settings/mqtt', {cache: 'no-store'});
+        if (!response.ok) throw new Error('Could not load MQTT settings.');
+        const settings = await response.json();
+        $('#mqtt-enabled').checked = settings.enabled === true;
+        setMqttFieldsVisible(settings.enabled === true);
+        $('#mqtt-host').value = settings.host || '';
+        $('#mqtt-port').value = settings.port || 1883;
+        $('#mqtt-username').value = settings.username || '';
+      } catch (error) {
+        if (location.protocol !== 'file:') setText('#mqtt-message', error.message);
+      }
+    }
+
+    function setMqttFieldsVisible(visible) {
+      $('#mqtt-fields').hidden = !visible;
+      $('#mqtt-fields').querySelectorAll('input').forEach(input => { input.disabled = !visible; });
+    }
+
+    async function saveMqttSettings(event) {
+      event.preventDefault();
+      const button = $('#mqtt-save');
+      button.disabled = true;
+      setText('#mqtt-message', 'Saving MQTT settings…');
+      try {
+        const response = await fetch('/api/v1/settings/mqtt', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            enabled: $('#mqtt-enabled').checked,
+            host: $('#mqtt-host').value,
+            port: Number($('#mqtt-port').value),
+            username: $('#mqtt-username').value,
+            password: $('#mqtt-password').value
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error === 'invalid_mqtt_settings'
+          ? 'Enter a broker host when MQTT is enabled and a valid port from 1 to 65535.'
+          : 'Could not save MQTT settings.');
+        $('#mqtt-password').value = '';
+        setText('#mqtt-message', 'Settings saved. The broker connection is restarting.');
+        await loadMqttSettings();
+      } catch (error) {
+        setText('#mqtt-message', error.message);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function uploadFirmware(event) {
+      event.preventDefault();
+      const file = $('#firmware-file').files[0];
+      if (!file) return;
+      const button = $('#firmware-upload');
+      button.disabled = true;
+      setText('#firmware-message', 'Uploading and verifying firmware…');
+      try {
+        const response = await fetch('/api/v1/update/firmware', {
+          method: 'POST', headers: {'Content-Type': 'application/octet-stream'}, body: file
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error === 'not_pandadesk_firmware'
+          ? 'This image is not a PandaDesk firmware build.'
+          : result.error === 'invalid_firmware_image' ? 'The firmware image is invalid or incomplete.' : 'Firmware update failed.');
+        setText('#firmware-message', 'Firmware verified. The device is rebooting into the updated firmware.');
+      } catch (error) {
+        setText('#firmware-message', error.message);
+        button.disabled = false;
+      }
+    }
+
+    async function uploadFilesystem(event) {
+      event.preventDefault();
+      const file = $('#filesystem-file').files[0];
+      if (!file) return;
+      const button = $('#filesystem-upload');
+      button.disabled = true;
+      setText('#filesystem-message', 'Uploading and verifying filesystem…');
+      try {
+        const response = await fetch('/api/v1/update/filesystem', {
+          method: 'POST', headers: {'Content-Type': 'application/octet-stream'}, body: file
+        });
+        if (!response.ok) throw new Error('Filesystem update failed.');
+        setText('#filesystem-message', 'Filesystem verified. The device is rebooting.');
+      } catch (error) {
+        setText('#filesystem-message', error.message);
+        button.disabled = false;
+      }
+    }
+
+    async function resetDevice() {
+      setText('#reset-message', 'Erasing settings and rebooting…');
+      $('#reset-open').disabled = true;
+      try {
+        const response = await fetch('/api/v1/device/reset', {method: 'POST'});
+        if (!response.ok) throw new Error('Could not reset device.');
+        setText('#reset-message', 'Settings erased. The device is rebooting into setup mode.');
+      } catch (error) {
+        setText('#reset-message', error.message);
+        $('#reset-open').disabled = false;
+      }
+    }
+
+    async function sendTargetHeight() {
+      if (!syncTargetInputToSlider()) return;
+      const height = Number(Number($('#target-height-input').value).toFixed(1));
+      try {
+        const response = await fetch('/api/v1/commands/height', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({request_id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, height_cm: height})
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (result.error === 'height_out_of_range') showTargetHeightError();
+          else setText('#command-message', result.error === 'profile_not_configured'
+            ? 'Height control is unavailable until a desk profile is qualified.'
+            : `Height request rejected (${response.status}).`);
+          return;
+        }
+        setText('#command-message', 'Height request accepted by the device.');
+      } catch (error) {
+        setText('#command-message', error.message);
+      }
+    }
+
+    function showUnavailable() {
+      setText('#state-label', 'No status connection');
+      setText('#state-message', 'Retrying the local PandaDesk API…');
+      document.querySelectorAll('[data-direction]').forEach(button => { button.disabled = true; });
+      setTargetControlsEnabled(false, false);
+    }
+
+    function showPage() {
+      const page = ['#settings', '#api'].includes(location.hash) ? location.hash.slice(1) : 'home';
+      $('#home-page').hidden = page !== 'home';
+      $('#settings-page').hidden = page !== 'settings';
+      $('#api-page').hidden = page !== 'api';
+      document.querySelectorAll('[data-page]').forEach(link => {
+        if (link.dataset.page === page) link.setAttribute('aria-current', 'page');
+        else link.removeAttribute('aria-current');
+      });
+    }
+
+    async function refresh() {
+      try {
+        const [stateResponse, capabilitiesResponse] = await Promise.all([
+          fetch('/api/v1/state', {cache: 'no-store'}),
+          fetch('/api/v1/capabilities', {cache: 'no-store'})
+        ]);
+        if (!stateResponse.ok || !capabilitiesResponse.ok) throw new Error('API unavailable');
+        const [state, capabilities] = await Promise.all([stateResponse.json(), capabilitiesResponse.json()]);
+        const ready = state.ready === true && capabilities.profile_configured === true;
+        setText('#firmware-version', state.firmware_version || 'unknown');
+        setText('#filesystem-version', state.filesystem_version || 'unknown');
+        setText('#state-label', state.state || 'Unknown state');
+        setText('#state-message', ready ? 'Desk profile is active.' : 'No desk profile is configured. No desk commands are sent.');
+        setText('#profile', state.profile || 'Not configured');
+        const height = state.height && state.height.value != null
+          ? `${state.height.value} ${state.height.unit || ''} (${state.height.quality || 'unknown'})`.trim()
+          : `Unknown (${state.height?.quality || 'unknown'})`;
+        setText('#height', height);
+        setText('#movement', state.moving === true ? 'Moving' : state.moving === false ? 'Stopped' : 'Unknown');
+        setText('#locked', state.locked === true ? 'Locked' : state.locked === false ? 'Unlocked' : 'Unknown');
+        setText('#sequence', Number.isInteger(state.sequence) ? String(state.sequence) : '—');
+        document.querySelectorAll('[data-direction]').forEach(button => {
+          button.disabled = !ready || (button.dataset.direction === 'stop' ? capabilities.stop !== true : capabilities.move !== true);
+        });
+        setTargetControlsEnabled(true, ready && capabilities.target_height === true);
+        setControlHelp(ready ? 'Use this control to send a short movement request.' : 'Controls unlock when a qualified desk profile and command transport are available.');
+      } catch {
+        showUnavailable();
+      }
+    }
+
+    async function sendMove(direction) {
+      const body = {request_id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, direction};
+      if (direction !== 'stop') body.expires_ms = 1000;
+      try {
+        const response = await fetch('/api/v1/commands/move', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(body)
+        });
+        if (!response.ok) {
+          const result = await response.json().catch(() => ({}));
+          throw new Error(result.error || `Command rejected (${response.status})`);
+        }
+        setText('#command-message', 'Command accepted by the device.');
+      } catch (error) {
+        setText('#command-message', error.message);
+      }
+    }
+
+    document.querySelectorAll('[data-direction]').forEach(button => {
+      button.addEventListener('click', () => sendMove(button.dataset.direction));
+    });
+    $('#target-height-input').addEventListener('input', syncTargetInputToSlider);
+    $('#target-height-input').addEventListener('change', () => {
+      if (syncTargetInputToSlider()) $('#target-height-input').value = Number($('#target-height-input').value).toFixed(1);
+    });
+    $('#target-height-slider').addEventListener('input', syncTargetSliderToInput);
+    $('#target-go').addEventListener('click', sendTargetHeight);
+    $('#wifi-form').addEventListener('submit', saveWifiSettings);
+    $('#device-form').addEventListener('submit', saveDeviceSettings);
+    $('#desk-form').addEventListener('submit', saveDeskSettings);
+    $('#desk-profile').addEventListener('change', updateDeskModelField);
+    $('#led-brightness').addEventListener('input', updateLedBrightnessLabel);
+    $('#mqtt-form').addEventListener('submit', saveMqttSettings);
+    $('#mqtt-enabled').addEventListener('change', () => setMqttFieldsVisible($('#mqtt-enabled').checked));
+    $('#firmware-form').addEventListener('submit', uploadFirmware);
+    $('#filesystem-form').addEventListener('submit', uploadFilesystem);
+    $('#reset-open').addEventListener('click', () => $('#reset-dialog').showModal());
+    $('#reset-dialog').addEventListener('close', () => {
+      if ($('#reset-dialog').returnValue === 'reset') resetDevice();
+    });
+    window.addEventListener('hashchange', showPage);
+    showPage();
+    loadWifiSettings();
+    loadDeviceSettings();
+    loadMqttSettings();
+    refresh();
+    setInterval(refresh, 3000);
+  </script>
+</body>
+</html>
