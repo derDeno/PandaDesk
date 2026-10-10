@@ -26,8 +26,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          firmware_version="$(tr -d '\r\n' < firmware/version.txt)"
-          filesystem_version="$(tr -d '\r\n' < firmware/data/version.txt)"
+          firmware_version="$(tr -d '\r\n' < version.txt)"
+          filesystem_version="$(tr -d '\r\n' < data/version.txt)"
           version_pattern='^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$'
           [[ "$firmware_version" =~ $version_pattern ]]
           [[ "$filesystem_version" =~ $version_pattern ]]
