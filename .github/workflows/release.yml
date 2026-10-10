@@ -34,11 +34,11 @@ jobs:
           echo "firmware_version=$firmware_version" >> "$GITHUB_ENV"
           echo "filesystem_version=$filesystem_version" >> "$GITHUB_ENV"
 
-          pio run -d firmware -e pandadesk-c6
-          pio run -d firmware -e pandadesk-c6 -t buildfs
+          pio run -d . -e pandadesk-c6
+          pio run -d . -e pandadesk-c6 -t buildfs
 
           mkdir -p release-assets
-          build_dir=firmware/.pio/build/pandadesk-c6
+          build_dir=.pio/build/pandadesk-c6
           pio pkg exec -p tool-esptoolpy -- esptool.py --chip esp32c6 merge_bin \
             --flash_mode dio --flash_size 4MB --fill-flash-size 4MB \
             -o "release-assets/PandaDesk_full_v${firmware_version}.bin" \
