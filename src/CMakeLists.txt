@@ -1,0 +1,1 @@
+idf_component_register(SRCS "app_main.cpp" "wifi.cpp" "api.cpp" "jiecang_rj12.cpp" "jiecang_jarvis_rj45.cpp" "jiecang_jarvis_transport.cpp" "jiecang_jcb35n2.cpp" INCLUDE_DIRS "../include" REQUIRES app_update cjson driver esp_event esp_http_server esp_netif esp_wifi littlefs mdns nvs_flash)

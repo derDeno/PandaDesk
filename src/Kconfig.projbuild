@@ -1,0 +1,8 @@
+menu "PandaDesk"
+
+config PANDA_WIFI_CONNECT_TIMEOUT_MS
+    int "Wi-Fi connection timeout before AP fallback (ms)"
+    range 1000 60000
+    default 20000
+
+endmenu
