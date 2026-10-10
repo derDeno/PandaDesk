@@ -59,6 +59,9 @@ constexpr Frame kGotoSelfCheck = make_target_height_command_mm(720);
 static_assert(kGotoSelfCheck.size == 8 && kGotoSelfCheck.bytes[2] == 0x1B &&
               kGotoSelfCheck.bytes[3] == 2 && kGotoSelfCheck.bytes[4] == 0x02 &&
               kGotoSelfCheck.bytes[5] == 0xD0 && kGotoSelfCheck.bytes[6] == 0xEF);
+static_assert(raw_height_to_tenths_cm(1286) == 1286);
+static_assert(raw_height_to_tenths_cm(254) == 645);
+static_assert(raw_height_to_tenths_cm(600) == 0);
 }  // namespace
 
 }  // namespace pandadesk::jiecang_rj12

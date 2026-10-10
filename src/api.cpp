@@ -18,7 +18,9 @@
 #include "freertos/task.h"
 #include "nvs.h"
 #include "nvs_flash.h"
-#include "pandadesk/jiecang_jarvis_transport.hpp"
+#include "pandadesk/jiecang_transport.hpp"
+#include "pandadesk/loctek_transport.hpp"
+#include "pandadesk/mqtt.hpp"
 #include "pandadesk/pins.hpp"
 
 namespace pandadesk::api {
@@ -31,12 +33,40 @@ constexpr size_t kMaxPasswordLength = 63;
 constexpr size_t kMaxMqttHostLength = 128;
 constexpr size_t kMaxMqttUsernameLength = 64;
 constexpr size_t kMaxMqttPasswordLength = 63;
+constexpr size_t kMaxHostnameLength = 63;
 constexpr size_t kMaxUriLength = CONFIG_HTTPD_MAX_URI_LEN;
 constexpr uint16_t kDefaultMinHeightTenths = 600;
 constexpr uint16_t kDefaultMaxHeightTenths = 1250;
 constexpr char kWebUiRoot[] = "/webui";
 constexpr char kLittlefsPartitionLabel[] = "littlefs";
 httpd_handle_t server = nullptr;
+
+bool desk_ready() {
+  return jiecang_transport::is_ready() || loctek_transport::is_ready();
+}
+
+jiecang_transport::MotionState desk_motion_state() {
+  return loctek_transport::is_ready() ? loctek_transport::motion_state() : jiecang_transport::motion_state();
+}
+
+const char *desk_profile_name() {
+  return loctek_transport::is_configured() ? "loctek_flexispot_rj45" : jiecang_transport::profile_name();
+}
+
+bool desk_height_tenths_cm(uint16_t *height) {
+  return loctek_transport::is_ready() ? loctek_transport::height_tenths_cm(height)
+                                      : jiecang_transport::height_tenths_cm(height);
+}
+
+uint32_t desk_state_sequence() {
+  return loctek_transport::is_ready() ? loctek_transport::state_sequence()
+                                      : jiecang_transport::state_sequence();
+}
+
+esp_err_t queue_desk_move(jiecang_transport::Direction direction, uint16_t duration_ms) {
+  return loctek_transport::is_configured() ? loctek_transport::queue_move(direction, duration_ms)
+                                           : jiecang_transport::queue_move(direction, duration_ms);
+}
 
 esp_err_t send_json(httpd_req_t *request, const char *status, const char *body) {
   httpd_resp_set_status(request, status);
@@ -62,32 +92,43 @@ esp_err_t state_handler(httpd_req_t *request) {
     std::fclose(version_file);
   }
   const esp_app_desc_t *firmware = esp_app_get_description();
-  const bool ready = jiecang_jarvis_transport::is_ready();
-  const auto motion = jiecang_jarvis_transport::motion_state();
+  const bool ready = desk_ready();
+  const auto motion = desk_motion_state();
   const char *state = ready ? "READY" : "SAFE_UNCONFIGURED";
-  const char *profile = ready ? "\"jiecang_jarvis_rj45\"" : "null";
-  const char *moving = motion == jiecang_jarvis_transport::MotionState::moving ? "true" :
-                       motion == jiecang_jarvis_transport::MotionState::stopped ? "false" : "null";
+  const char *profile_name = desk_profile_name();
+  char profile[40] = "null";
+  if (profile_name != nullptr) std::snprintf(profile, sizeof(profile), "\"%s\"", profile_name);
+  const char *moving = motion == jiecang_transport::MotionState::moving ? "true" :
+                       motion == jiecang_transport::MotionState::stopped ? "false" : "null";
+  uint16_t height_tenths_cm = 0;
+  const bool has_height = ready && desk_height_tenths_cm(&height_tenths_cm);
+  char height[16] = "null";
+  if (has_height) {
+    std::snprintf(height, sizeof(height), "%u.%u", static_cast<unsigned>(height_tenths_cm / 10),
+                  static_cast<unsigned>(height_tenths_cm % 10));
+  }
   char response[320];
   std::snprintf(response, sizeof(response),
                 "{\"state\":\"%s\",\"profile\":%s,\"ready\":%s,"
-                "\"height\":{\"value\":null,\"quality\":\"unknown\"},"
+                "\"height\":{\"value\":%s,\"unit\":\"cm\",\"quality\":\"%s\"},"
                 "\"moving\":%s,\"locked\":null,\"sequence\":%lu,"
                 "\"firmware_version\":\"%s\",\"filesystem_version\":\"%s\"}",
-                state, profile, ready ? "true" : "false", moving,
-                static_cast<unsigned long>(jiecang_jarvis_transport::state_sequence()),
+                state, profile, ready ? "true" : "false", height,
+                has_height ? "measured" : "unknown", moving,
+                static_cast<unsigned long>(desk_state_sequence()),
                 firmware->version, filesystem_version);
   return send_json(request, "200 OK", response);
 }
 
 esp_err_t capabilities_handler(httpd_req_t *request) {
-  const bool ready = jiecang_jarvis_transport::is_ready();
+  const bool ready = desk_ready();
+  const bool target_height = jiecang_transport::supports_target_height();
   char response[160];
   std::snprintf(response, sizeof(response),
                 "{\"profile_configured\":%s,\"move\":%s,\"stop\":%s,"
                 "\"target_height\":%s,\"presets\":false,\"child_lock\":false}",
                 ready ? "true" : "false", ready ? "true" : "false",
-                ready ? "true" : "false", ready ? "true" : "false");
+                ready ? "true" : "false", target_height ? "true" : "false");
   return send_json(request, "200 OK", response);
 }
 
@@ -103,7 +144,7 @@ bool receive_body(httpd_req_t *request, char *body, size_t capacity) {
   return true;
 }
 
-bool parse_move_request(httpd_req_t *request, jiecang_jarvis_transport::Direction *out_direction,
+bool parse_move_request(httpd_req_t *request, jiecang_transport::Direction *out_direction,
                         uint16_t *duration_ms) {
   if (out_direction == nullptr || duration_ms == nullptr) return false;
   char body[kMaxBodyLength + 1]{};
@@ -133,24 +174,24 @@ bool parse_move_request(httpd_req_t *request, jiecang_jarvis_transport::Directio
     *duration_ms = static_cast<uint16_t>(expires_ms->valueint);
   }
   if (direction_valid && std::strcmp(direction->valuestring, "stop") == 0) {
-    *out_direction = jiecang_jarvis_transport::Direction::stop;
+    *out_direction = jiecang_transport::Direction::stop;
     *duration_ms = 0;
   } else if (direction_valid && std::strcmp(direction->valuestring, "up") == 0) {
-    *out_direction = jiecang_jarvis_transport::Direction::up;
+    *out_direction = jiecang_transport::Direction::up;
   } else if (direction_valid && std::strcmp(direction->valuestring, "down") == 0) {
-    *out_direction = jiecang_jarvis_transport::Direction::down;
+    *out_direction = jiecang_transport::Direction::down;
   }
   cJSON_Delete(root);
   return id_valid && direction_valid && expiry_valid;
 }
 
 esp_err_t move_handler(httpd_req_t *request) {
-  jiecang_jarvis_transport::Direction direction{};
+  jiecang_transport::Direction direction{};
   uint16_t duration_ms = 0;
   if (!parse_move_request(request, &direction, &duration_ms)) {
     return send_json(request, "400 Bad Request", "{\"error\":\"invalid_request\"}");
   }
-  const esp_err_t result = jiecang_jarvis_transport::queue_move(direction, duration_ms);
+  const esp_err_t result = queue_desk_move(direction, duration_ms);
   if (result == ESP_ERR_INVALID_STATE) {
     return send_json(request, "409 Conflict", "{\"error\":\"profile_not_ready\"}");
   }
@@ -202,10 +243,13 @@ esp_err_t target_height_handler(httpd_req_t *request) {
   if (target_tenths < minimum || target_tenths > maximum) {
     return send_json(request, "400 Bad Request", "{\"error\":\"height_out_of_range\"}");
   }
-  if (!jiecang_jarvis_transport::is_ready()) {
+  if (!desk_ready()) {
     return send_json(request, "409 Conflict", "{\"error\":\"profile_not_ready\"}");
   }
-  const esp_err_t result = jiecang_jarvis_transport::queue_target_height(
+  if (!jiecang_transport::supports_target_height()) {
+    return send_json(request, "409 Conflict", "{\"error\":\"target_height_unavailable\"}");
+  }
+  const esp_err_t result = jiecang_transport::queue_target_height(
       static_cast<uint16_t>(std::lround(target_tenths)));
   if (result == ESP_ERR_INVALID_STATE) {
     return send_json(request, "409 Conflict", "{\"error\":\"profile_not_ready\"}");
@@ -303,6 +347,16 @@ bool valid_desk_profile(const char *profile) {
          std::strcmp(profile, "jiecang_jarvis_rj45") == 0 || std::strcmp(profile, "loctek_flexispot_rj45") == 0;
 }
 
+bool valid_hostname(const char *hostname) {
+  const size_t length = hostname == nullptr ? 0 : std::strlen(hostname);
+  if (length == 0 || length > kMaxHostnameLength || hostname[0] == '-' || hostname[length - 1] == '-') return false;
+  for (size_t i = 0; i < length; ++i) {
+    const unsigned char c = static_cast<unsigned char>(hostname[i]);
+    if (!std::isalnum(c) && c != '-') return false;
+  }
+  return true;
+}
+
 bool valid_jiecang_rj12_model(const char *model) {
   constexpr const char *models[] = {"JCB35M11C", "JCHT35K72C", "JCB36N2CA", "JCB36N2CA-230",
                                     "JCB36N2HAG-230", "JCHT35K9-003-v4", "JCB36NE2", "JCB36M", "JCB36NE2A-230"};
@@ -313,10 +367,15 @@ bool valid_jiecang_rj12_model(const char *model) {
 }
 
 bool valid_jiecang_rj45_model(const char *model) {
-  return std::strcmp(model, "FullyCB2C-A") == 0 || std::strcmp(model, "JCB35N2") == 0;
+  return std::strcmp(model, "FullyCB2C-A") == 0;
+}
+
+bool valid_loctek_model(const char *model) {
+  return std::strcmp(model, "FLEXISPOT_E7_PRO_PLUS") == 0;
 }
 
 esp_err_t device_settings_get_handler(httpd_req_t *request) {
+  char hostname[kMaxHostnameLength + 1] = "pandadesk";
   char profile[33]{};
   char model[33]{};
   uint8_t brightness = 100;
@@ -328,12 +387,16 @@ esp_err_t device_settings_get_handler(httpd_req_t *request) {
     size_t model_size = sizeof(model);
     const esp_err_t profile_result = nvs_get_str(settings, "desk_profile", profile, &profile_size);
     const esp_err_t model_result = nvs_get_str(settings, "desk_model", model, &model_size);
+    size_t hostname_size = sizeof(hostname);
+    const esp_err_t hostname_result = nvs_get_str(settings, "hostname", hostname, &hostname_size);
     const esp_err_t brightness_result = nvs_get_u8(settings, "led_brightness", &brightness);
     const esp_err_t min_result = nvs_get_u16(settings, "min_h_tenths", &minimum);
     const esp_err_t max_result = nvs_get_u16(settings, "max_h_tenths", &maximum);
     nvs_close(settings);
     if ((profile_result != ESP_OK && profile_result != ESP_ERR_NVS_NOT_FOUND) ||
         (model_result != ESP_OK && model_result != ESP_ERR_NVS_NOT_FOUND) ||
+        (hostname_result != ESP_OK && hostname_result != ESP_ERR_NVS_NOT_FOUND) ||
+        !valid_hostname(hostname) ||
         (brightness_result != ESP_OK && brightness_result != ESP_ERR_NVS_NOT_FOUND) || brightness > 100 ||
         (min_result != ESP_OK && min_result != ESP_ERR_NVS_NOT_FOUND) ||
         (max_result != ESP_OK && max_result != ESP_ERR_NVS_NOT_FOUND)) {
@@ -344,7 +407,8 @@ esp_err_t device_settings_get_handler(httpd_req_t *request) {
   }
 
   cJSON *response = cJSON_CreateObject();
-  if (minimum >= maximum || maximum > 2000 || response == nullptr || !cJSON_AddStringToObject(response, "profile", profile) ||
+  if (minimum >= maximum || maximum > 2000 || response == nullptr || !cJSON_AddStringToObject(response, "hostname", hostname) ||
+      !cJSON_AddStringToObject(response, "profile", profile) ||
       !cJSON_AddStringToObject(response, "model", model) ||
       !cJSON_AddNumberToObject(response, "led_brightness", brightness) ||
       !cJSON_AddNumberToObject(response, "min_height_cm", minimum / 10.0) ||
@@ -371,8 +435,18 @@ esp_err_t device_settings_post_handler(httpd_req_t *request) {
   const cJSON *profile_item = cJSON_GetObjectItemCaseSensitive(root, "profile");
   const cJSON *model_item = cJSON_GetObjectItemCaseSensitive(root, "model");
   const cJSON *brightness_item = cJSON_GetObjectItemCaseSensitive(root, "led_brightness");
+  const cJSON *hostname_item = cJSON_GetObjectItemCaseSensitive(root, "hostname");
   const cJSON *min_item = cJSON_GetObjectItemCaseSensitive(root, "min_height_cm");
   const cJSON *max_item = cJSON_GetObjectItemCaseSensitive(root, "max_height_cm");
+  const bool has_desk_settings = profile_item != nullptr || model_item != nullptr || min_item != nullptr || max_item != nullptr;
+  const bool has_hostname = hostname_item != nullptr;
+  const bool has_brightness = brightness_item != nullptr;
+  const bool has_device_settings = has_hostname || has_brightness;
+  const char *hostname = cJSON_IsString(hostname_item) ? hostname_item->valuestring : nullptr;
+  const bool hostname_valid = hostname_item == nullptr || valid_hostname(hostname);
+  const bool brightness_valid = brightness_item == nullptr ||
+      (cJSON_IsNumber(brightness_item) && brightness_item->valuedouble >= 0 && brightness_item->valuedouble <= 100 &&
+       brightness_item->valuedouble == brightness_item->valueint);
   const char *profile = cJSON_IsString(profile_item) && profile_item->valuestring != nullptr ? profile_item->valuestring : nullptr;
   const char *model = cJSON_IsString(model_item) && model_item->valuestring != nullptr ? model_item->valuestring : "";
   const bool heights_valid = cJSON_IsNumber(min_item) && cJSON_IsNumber(max_item) &&
@@ -383,39 +457,56 @@ esp_err_t device_settings_post_handler(httpd_req_t *request) {
       std::fabs(max_item->valuedouble * 10 - std::round(max_item->valuedouble * 10)) < 1e-7;
   const bool model_valid = profile != nullptr &&
       (std::strcmp(profile, "jiecang_rj12") == 0 ? valid_jiecang_rj12_model(model) :
-       std::strcmp(profile, "jiecang_jarvis_rj45") == 0 ? valid_jiecang_rj45_model(model) : model[0] == '\0');
-  const bool valid = profile != nullptr && valid_desk_profile(profile) && model_valid && cJSON_IsNumber(brightness_item) &&
-                     brightness_item->valuedouble >= 0 && brightness_item->valuedouble <= 100 &&
-                     brightness_item->valuedouble == brightness_item->valueint && heights_valid;
+       std::strcmp(profile, "jiecang_jarvis_rj45") == 0 ? valid_jiecang_rj45_model(model) :
+       std::strcmp(profile, "loctek_flexispot_rj45") == 0 ? valid_loctek_model(model) : model[0] == '\0');
+  const bool desk_settings_valid = !has_desk_settings ||
+      (profile_item != nullptr && model_item != nullptr && min_item != nullptr && max_item != nullptr &&
+       profile != nullptr && cJSON_IsString(model_item) && valid_desk_profile(profile) && model_valid && heights_valid);
+  const bool valid = (has_device_settings || has_desk_settings) && hostname_valid && brightness_valid && desk_settings_valid;
   if (!valid) {
     cJSON_Delete(root);
     return send_json(request, "400 Bad Request", "{\"error\":\"invalid_device_settings\"}");
   }
-  const uint8_t brightness = static_cast<uint8_t>(brightness_item->valueint);
-  const uint16_t minimum = static_cast<uint16_t>(std::lround(min_item->valuedouble * 10));
-  const uint16_t maximum = static_cast<uint16_t>(std::lround(max_item->valuedouble * 10));
+  const uint8_t brightness = brightness_item == nullptr ? 100 : static_cast<uint8_t>(brightness_item->valueint);
+  const uint16_t minimum = heights_valid ? static_cast<uint16_t>(std::lround(min_item->valuedouble * 10)) : 0;
+  const uint16_t maximum = heights_valid ? static_cast<uint16_t>(std::lround(max_item->valuedouble * 10)) : 0;
+  char previous_hostname[kMaxHostnameLength + 1] = "pandadesk";
   nvs_handle_t settings;
   esp_err_t result = nvs_open("device", NVS_READWRITE, &settings);
   if (result != ESP_OK) {
     cJSON_Delete(root);
     return send_json(request, "503 Service Unavailable", "{\"error\":\"settings_unavailable\"}");
   }
-  result = nvs_set_str(settings, "desk_profile", profile);
-  if (result == ESP_OK) result = nvs_set_str(settings, "desk_model", model);
-  if (result == ESP_OK) result = nvs_set_u8(settings, "led_brightness", brightness);
-  if (result == ESP_OK) result = nvs_set_u16(settings, "min_h_tenths", minimum);
-  if (result == ESP_OK) result = nvs_set_u16(settings, "max_h_tenths", maximum);
+  size_t hostname_size = sizeof(previous_hostname);
+  const esp_err_t hostname_read = nvs_get_str(settings, "hostname", previous_hostname, &hostname_size);
+  if (hostname_read != ESP_OK && hostname_read != ESP_ERR_NVS_NOT_FOUND) result = hostname_read;
+  const bool hostname_changed = has_hostname && std::strcmp(hostname, previous_hostname) != 0;
+  if (result == ESP_OK && has_hostname) result = nvs_set_str(settings, "hostname", hostname);
+  if (result == ESP_OK && profile_item != nullptr) result = nvs_set_str(settings, "desk_profile", profile);
+  if (result == ESP_OK && model_item != nullptr) result = nvs_set_str(settings, "desk_model", model);
+  if (result == ESP_OK && brightness_item != nullptr) result = nvs_set_u8(settings, "led_brightness", brightness);
+  if (result == ESP_OK && has_desk_settings) result = nvs_set_u16(settings, "min_h_tenths", minimum);
+  if (result == ESP_OK && has_desk_settings) result = nvs_set_u16(settings, "max_h_tenths", maximum);
   if (result == ESP_OK) result = nvs_commit(settings);
   nvs_close(settings);
   cJSON_Delete(root);
   if (result != ESP_OK) return send_json(request, "500 Internal Server Error", "{\"error\":\"save_failed\"}");
 
-  constexpr uint32_t max_duty = (1U << LEDC_TIMER_13_BIT) - 1U;
-  result = ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, max_duty * brightness / 100);
-  if (result == ESP_OK) result = ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
-  if (result != ESP_OK) {
-    ESP_LOGE(kTag, "Could not update status LED brightness: %s", esp_err_to_name(result));
-    return send_json(request, "500 Internal Server Error", "{\"error\":\"led_update_failed\",\"saved\":true}");
+  if (has_brightness) {
+    constexpr uint32_t max_duty = (1U << LEDC_TIMER_13_BIT) - 1U;
+    result = ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, max_duty * brightness / 100);
+    if (result == ESP_OK) result = ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+    if (result != ESP_OK) {
+      ESP_LOGE(kTag, "Could not update status LED brightness: %s", esp_err_to_name(result));
+      return send_json(request, "500 Internal Server Error", "{\"error\":\"led_update_failed\",\"saved\":true}");
+    }
+  }
+  if (has_desk_settings) mqtt::reload();
+  if (hostname_changed) {
+    if (!schedule_reboot()) {
+      return send_json(request, "500 Internal Server Error", "{\"error\":\"reboot_schedule_failed\",\"saved\":true}");
+    }
+    return send_json(request, "202 Accepted", "{\"saved\":true,\"rebooting\":true}");
   }
   return send_json(request, "200 OK", "{\"saved\":true}");
 }
@@ -524,7 +615,8 @@ esp_err_t mqtt_settings_post_handler(httpd_req_t *request) {
   nvs_close(settings);
   cJSON_Delete(root);
   if (result != ESP_OK) return send_json(request, "500 Internal Server Error", "{\"error\":\"save_failed\"}");
-  return send_json(request, "200 OK", "{\"saved\":true,\"active\":false}");
+  mqtt::reload();
+  return send_json(request, "200 OK", "{\"saved\":true,\"restarting\":true}");
 }
 
 esp_err_t firmware_update_handler(httpd_req_t *request) {

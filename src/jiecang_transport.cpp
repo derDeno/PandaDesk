@@ -1,4 +1,4 @@
-#include "pandadesk/jiecang_jarvis_transport.hpp"
+#include "pandadesk/jiecang_transport.hpp"
 
 #include <cstdint>
 #include <cstring>
@@ -11,21 +11,26 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include "nvs.h"
-#include "pandadesk/jiecang_jarvis_rj45.hpp"
+#include "pandadesk/jiecang_rj12.hpp"
 #include "pandadesk/pins.hpp"
 
-namespace pandadesk::jiecang_jarvis_transport {
+namespace pandadesk::jiecang_transport {
 namespace {
-constexpr char kTag[] = "JarvisUART";
+constexpr char kTag[] = "JiecangUART";
 constexpr uart_port_t kUart = UART_NUM_1;
 constexpr uart_port_t kHandsetUart = UART_NUM_0;
 constexpr uint32_t kBaudRate = 9600;
 constexpr uint32_t kResponseTimeoutMs = 500;
+enum class Profile : uint8_t { none, rj12, jarvis_rj45 };
 QueueHandle_t gHandsetEvents = nullptr;
 QueueHandle_t gHandsetTxQueue = nullptr;
 QueueHandle_t gApiTxQueue = nullptr;
 QueueSetHandle_t gTxQueueSet = nullptr;
 std::atomic<bool> gReady{false};
+std::atomic<Profile> gProfile{Profile::none};
+std::atomic<bool> gTargetHeightSupported{false};
+std::atomic<bool> gHasHeight{false};
+std::atomic<uint16_t> gHeightTenthsCm{0};
 std::atomic<MotionState> gMotion{MotionState::unknown};
 std::atomic<uint32_t> gSequence{0};
 std::atomic<uint32_t> gCommandGeneration{0};
@@ -39,11 +44,21 @@ struct TxItem {
   uint8_t bytes[jiecang_rj12::kMaxFrameSize]{};
 };
 
-bool jarvis_profile_selected(bool nvs_available) {
-  if (!nvs_available) return false;
+bool valid_rj12_model(const char *model) {
+  constexpr const char *models[] = {"JCB35M11C", "JCHT35K72C", "JCB36N2CA", "JCB36N2CA-230",
+                                    "JCB36N2HAG-230", "JCHT35K9-003-v4", "JCB36NE2", "JCB36M",
+                                    "JCB36NE2A-230"};
+  for (const char *supported : models) {
+    if (std::strcmp(model, supported) == 0) return true;
+  }
+  return false;
+}
+
+Profile configured_profile(bool nvs_available, bool *target_height_supported) {
+  if (!nvs_available || target_height_supported == nullptr) return Profile::none;
 
   nvs_handle_t settings;
-  if (nvs_open("device", NVS_READONLY, &settings) != ESP_OK) return false;
+  if (nvs_open("device", NVS_READONLY, &settings) != ESP_OK) return Profile::none;
   char profile[33]{};
   char model[33]{};
   size_t profile_size = sizeof(profile);
@@ -51,12 +66,20 @@ bool jarvis_profile_selected(bool nvs_available) {
   const esp_err_t profile_result = nvs_get_str(settings, "desk_profile", profile, &profile_size);
   const esp_err_t model_result = nvs_get_str(settings, "desk_model", model, &model_size);
   nvs_close(settings);
-  return profile_result == ESP_OK && model_result == ESP_OK &&
-         std::strcmp(profile, "jiecang_jarvis_rj45") == 0 &&
-         std::strcmp(model, "FullyCB2C-A") == 0;
+  if (profile_result != ESP_OK || model_result != ESP_OK) return Profile::none;
+  if (std::strcmp(profile, "jiecang_rj12") == 0 && valid_rj12_model(model)) {
+    *target_height_supported = std::strcmp(model, "JCHT35K72C") != 0;
+    return Profile::rj12;
+  }
+  if (std::strcmp(profile, "jiecang_jarvis_rj45") == 0 &&
+      std::strcmp(model, "FullyCB2C-A") == 0) {
+    *target_height_supported = true;
+    return Profile::jarvis_rj45;
+  }
+  return Profile::none;
 }
 
-bool receive_controller_frame(jiecang_jarvis_rj45::Frame *frame, uint32_t timeout_ms) {
+bool receive_controller_frame(jiecang_rj12::Frame *frame, uint32_t timeout_ms) {
   if (frame == nullptr) return false;
 
   uint8_t bytes[jiecang_rj12::kMaxFrameSize]{};
@@ -83,7 +106,7 @@ bool receive_controller_frame(jiecang_jarvis_rj45::Frame *frame, uint32_t timeou
       continue;
     }
     if (length >= 4 && length == static_cast<size_t>(bytes[3]) + 6) {
-      if (jiecang_jarvis_rj45::decode_frame(bytes, length, frame) &&
+      if (jiecang_rj12::decode_frame(bytes, length, frame) &&
           frame->bytes[0] == jiecang_rj12::kControllerAddress) {
         return true;
       }
@@ -101,9 +124,9 @@ esp_err_t send_handset_bytes(const uint8_t *bytes, size_t size) {
   return uart_wait_tx_done(kUart, pdMS_TO_TICKS(1000));
 }
 
-esp_err_t send_handset_frame(const jiecang_jarvis_rj45::Frame &frame) {
-  jiecang_jarvis_rj45::Frame checked{};
-  if (!jiecang_jarvis_rj45::decode_frame(frame.bytes, frame.size, &checked) ||
+esp_err_t send_handset_frame(const jiecang_rj12::Frame &frame) {
+  jiecang_rj12::Frame checked{};
+  if (!jiecang_rj12::decode_frame(frame.bytes, frame.size, &checked) ||
       checked.bytes[0] != jiecang_rj12::kHandsetAddress) {
     return ESP_ERR_INVALID_ARG;
   }
@@ -218,8 +241,8 @@ void handset_receive_task(void *) {
       }
       if (expected == 0 || length < expected) return false;
 
-      jiecang_jarvis_rj45::Frame checked{};
-      const bool valid = jiecang_jarvis_rj45::decode_frame(bytes, length, &checked) &&
+      jiecang_rj12::Frame checked{};
+      const bool valid = jiecang_rj12::decode_frame(bytes, length, &checked) &&
                          checked.bytes[0] == jiecang_rj12::kHandsetAddress;
       if (valid) {
         item->size = static_cast<uint8_t>(length);
@@ -275,7 +298,7 @@ esp_err_t transmit(const TxItem &item) {
 }
 
 esp_err_t send_stop_frame() {
-  return send_handset_frame(jiecang_jarvis_rj45::make_stop());
+  return send_handset_frame(jiecang_rj12::make_stop_command());
 }
 
 void tx_task(void *) {
@@ -321,8 +344,8 @@ void tx_task(void *) {
                  item.bytes[2] == jiecang_rj12::kStopCommand) {
         gMotion.store(MotionState::stopped);
       } else if (item.kind == TxKind::frame && item.size >= 6 &&
-                 (item.bytes[2] == jiecang_jarvis_rj45::kRaise ||
-                  item.bytes[2] == jiecang_jarvis_rj45::kLower)) {
+                 (item.bytes[2] == jiecang_rj12::kRaiseCommand ||
+                  item.bytes[2] == jiecang_rj12::kLowerCommand)) {
         gMotion.store(MotionState::unknown);
       }
       gSequence.fetch_add(1);
@@ -331,9 +354,9 @@ void tx_task(void *) {
 
     if (item.size == 0) continue;
     const uint8_t command = item.bytes[2];
-    const bool timed_move = command == jiecang_jarvis_rj45::kRaise ||
-                            command == jiecang_jarvis_rj45::kLower;
-    if (timed_move_active && (timed_move || command == jiecang_jarvis_rj45::kGotoHeight)) {
+    const bool timed_move = command == jiecang_rj12::kRaiseCommand ||
+                            command == jiecang_rj12::kLowerCommand;
+    if (timed_move_active && (timed_move || command == jiecang_rj12::kGotoHeightCommand)) {
       if (send_stop_frame() != ESP_OK) gReady.store(false);
       timed_move_active = false;
     }
@@ -368,8 +391,8 @@ bool start_command_tasks() {
       xQueueAddToSet(gApiTxQueue, gTxQueueSet) != pdPASS) {
     return false;
   }
-  if (xTaskCreate(tx_task, "jarvis_tx", 4096, nullptr, 7, nullptr) != pdPASS ||
-      xTaskCreate(handset_receive_task, "jarvis_handset", 4096, nullptr, 7, nullptr) != pdPASS) {
+  if (xTaskCreate(tx_task, "jiecang_tx", 4096, nullptr, 7, nullptr) != pdPASS ||
+      xTaskCreate(handset_receive_task, "jiecang_handset", 4096, nullptr, 7, nullptr) != pdPASS) {
     return false;
   }
   return true;
@@ -379,14 +402,14 @@ esp_err_t negotiate_startup() {
   constexpr uint8_t null_byte = 0x00;
   if (send_handset_bytes(&null_byte, 1) != ESP_OK) return ESP_FAIL;
 
-  jiecang_jarvis_rj45::Frame response{};
+  jiecang_rj12::Frame response{};
   if (receive_controller_frame(&response, kResponseTimeoutMs)) return ESP_OK;
 
   if (send_break_230ms() != ESP_OK || send_handset_bytes(&null_byte, 1) != ESP_OK) return ESP_FAIL;
   if (receive_controller_frame(&response, kResponseTimeoutMs)) return ESP_OK;
 
   ESP_LOGI(kTag, "No response to NULL/BREAK startup; polling with the documented WAKE frame");
-  const auto wake = jiecang_jarvis_rj45::make_wake();
+  const auto wake = jiecang_rj12::make_handset_command(jiecang_rj12::kWakeCommand, nullptr, 0);
   while (true) {
     if (send_handset_frame(wake) != ESP_OK) return ESP_FAIL;
     if (receive_controller_frame(&response, kResponseTimeoutMs)) return ESP_OK;
@@ -396,31 +419,45 @@ esp_err_t negotiate_startup() {
 void transport_task(void *) {
   const esp_err_t result = initialize_uart();
   if (result != ESP_OK) {
-    ESP_LOGE(kTag, "Could not initialize Jarvis UART: %s", esp_err_to_name(result));
+    ESP_LOGE(kTag, "Could not initialize Jiecang UART: %s", esp_err_to_name(result));
     stop_uart();
     gpio_set_level(pandadesk::pins::translator_enable, 0);
     vTaskDelete(nullptr);
     return;
   }
 
-  ESP_LOGI(kTag, "Starting FullyCB2C-A UART negotiation at %lu 8N1", static_cast<unsigned long>(kBaudRate));
+  ESP_LOGI(kTag, "Starting Jiecang UART negotiation at %lu 8N1", static_cast<unsigned long>(kBaudRate));
   const esp_err_t startup_result = negotiate_startup();
   if (startup_result == ESP_OK) {
-    ESP_LOGI(kTag, "FullyCB2C-A startup response received");
+    ESP_LOGI(kTag, "Controller startup response received");
     if (!start_command_tasks()) {
-      ESP_LOGE(kTag, "Could not start Jarvis command and handset tasks");
+      ESP_LOGE(kTag, "Could not start Jiecang command and handset tasks");
       vTaskDelete(nullptr);
       return;
     }
     gMotion.store(MotionState::unknown);
     gReady.store(true);
-    ESP_LOGI(kTag, "Jarvis movement commands and handset passthrough active");
+    ESP_LOGI(kTag, "Movement commands and handset pass-through active");
+    TxItem settings_request{};
+    const auto request_frame = jiecang_rj12::make_read_settings_command();
+    settings_request.size = static_cast<uint8_t>(request_frame.size);
+    std::memcpy(settings_request.bytes, request_frame.bytes, request_frame.size);
+    xQueueSendToBack(gApiTxQueue, &settings_request, 0);
     while (true) {
-      jiecang_jarvis_rj45::Frame frame{};
-      receive_controller_frame(&frame, 1000);
+      jiecang_rj12::Frame frame{};
+      if (receive_controller_frame(&frame, 1000)) {
+        uint16_t raw_height = 0;
+        if (jiecang_rj12::decode_height_raw(frame, &raw_height)) {
+          const uint16_t height_tenths_cm = jiecang_rj12::raw_height_to_tenths_cm(raw_height);
+          if (height_tenths_cm == 0) continue;
+          gHeightTenthsCm.store(height_tenths_cm);
+          gHasHeight.store(true);
+          gSequence.fetch_add(1);
+        }
+      }
     }
   } else {
-    ESP_LOGE(kTag, "Jarvis startup negotiation failed: %s", esp_err_to_name(startup_result));
+    ESP_LOGE(kTag, "Jiecang startup negotiation failed: %s", esp_err_to_name(startup_result));
     stop_uart();
     gpio_set_level(pandadesk::pins::translator_enable, 0);
   }
@@ -430,14 +467,36 @@ void transport_task(void *) {
 
 void start_if_configured(bool nvs_available) {
   gReady.store(false);
+  gProfile.store(Profile::none);
+  gTargetHeightSupported.store(false);
+  gHasHeight.store(false);
   gMotion.store(MotionState::unknown);
-  if (!jarvis_profile_selected(nvs_available)) return;
-  if (xTaskCreate(transport_task, "jarvis_uart", 4096, nullptr, 6, nullptr) != pdPASS) {
-    ESP_LOGE(kTag, "Could not create Jarvis UART task");
+  bool supports_target = false;
+  const Profile profile = configured_profile(nvs_available, &supports_target);
+  if (profile == Profile::none) return;
+  gProfile.store(profile);
+  gTargetHeightSupported.store(supports_target);
+  if (xTaskCreate(transport_task, "jiecang_uart", 4096, nullptr, 6, nullptr) != pdPASS) {
+    gProfile.store(Profile::none);
+    gTargetHeightSupported.store(false);
+    ESP_LOGE(kTag, "Could not create Jiecang UART task");
   }
 }
 
 bool is_ready() { return gReady.load(); }
+
+bool supports_target_height() { return gReady.load() && gTargetHeightSupported.load(); }
+
+const char *profile_name() {
+  if (!gReady.load()) return nullptr;
+  return gProfile.load() == Profile::rj12 ? "jiecang_rj12" : "jiecang_jarvis_rj45";
+}
+
+bool height_tenths_cm(uint16_t *height) {
+  if (height == nullptr || !gHasHeight.load()) return false;
+  *height = gHeightTenthsCm.load();
+  return true;
+}
 
 MotionState motion_state() { return gMotion.load(); }
 
@@ -449,14 +508,14 @@ esp_err_t queue_move(Direction direction, uint16_t duration_ms) {
   if (direction == Direction::stop) {
     gCommandGeneration.fetch_add(1);
     item.generation = gCommandGeneration.load();
-    const auto frame = jiecang_jarvis_rj45::make_stop();
+    const auto frame = jiecang_rj12::make_stop_command();
     item.size = static_cast<uint8_t>(frame.size);
     std::memcpy(item.bytes, frame.bytes, frame.size);
     return xQueueSendToFront(gApiTxQueue, &item, 0) == pdTRUE ? ESP_OK : ESP_ERR_NO_MEM;
   }
   if (duration_ms < 1 || duration_ms > 5000) return ESP_ERR_INVALID_ARG;
-  const auto frame = direction == Direction::up ? jiecang_jarvis_rj45::make_raise()
-                                                 : jiecang_jarvis_rj45::make_lower();
+  const auto frame = direction == Direction::up ? jiecang_rj12::make_raise_command()
+                                                 : jiecang_rj12::make_lower_command();
   item.generation = gCommandGeneration.load();
   item.duration_ms = duration_ms;
   item.size = static_cast<uint8_t>(frame.size);
@@ -465,8 +524,10 @@ esp_err_t queue_move(Direction direction, uint16_t duration_ms) {
 }
 
 esp_err_t queue_target_height(uint16_t height_tenths_cm) {
-  if (!gReady.load() || gApiTxQueue == nullptr) return ESP_ERR_INVALID_STATE;
-  const auto frame = jiecang_jarvis_rj45::make_target_height(height_tenths_cm);
+  if (!supports_target_height() || gApiTxQueue == nullptr) {
+    return gReady.load() ? ESP_ERR_NOT_SUPPORTED : ESP_ERR_INVALID_STATE;
+  }
+  const auto frame = jiecang_rj12::make_target_height_command_mm(height_tenths_cm);
   TxItem item{};
   item.generation = gCommandGeneration.load();
   item.size = static_cast<uint8_t>(frame.size);
@@ -474,4 +535,4 @@ esp_err_t queue_target_height(uint16_t height_tenths_cm) {
   return xQueueSendToBack(gApiTxQueue, &item, 0) == pdTRUE ? ESP_OK : ESP_ERR_NO_MEM;
 }
 
-}  // namespace pandadesk::jiecang_jarvis_transport
+}  // namespace pandadesk::jiecang_transport

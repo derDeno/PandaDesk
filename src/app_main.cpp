@@ -11,7 +11,9 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 
-#include "pandadesk/jiecang_jarvis_transport.hpp"
+#include "pandadesk/jiecang_transport.hpp"
+#include "pandadesk/loctek_transport.hpp"
+#include "pandadesk/mqtt.hpp"
 #include "pandadesk/pins.hpp"
 #include "pandadesk/wifi.hpp"
 
@@ -113,8 +115,10 @@ extern "C" void app_main() {
   if (!nvs_available) ESP_LOGW(kTag, "Settings unavailable: %s", esp_err_to_name(nvs_result));
   apply_led_brightness(load_led_brightness(nvs_available));
   mount_webui();
-  ESP_LOGI(kTag, "Firmware %s booted; desk movement remains disabled", esp_app_get_description()->version);
-  ESP_LOGI(kTag, "Jarvis UART startup runs only for a saved FullyCB2C-A profile");
+  ESP_LOGI(kTag, "Firmware %s booted", esp_app_get_description()->version);
+  ESP_LOGI(kTag, "Desk transports start only for a supported saved profile/model");
   pandadesk::wifi::start(nvs_available);
-  pandadesk::jiecang_jarvis_transport::start_if_configured(nvs_available);
+  pandadesk::jiecang_transport::start_if_configured(nvs_available);
+  pandadesk::loctek_transport::start_if_configured(nvs_available);
+  pandadesk::mqtt::start();
 }

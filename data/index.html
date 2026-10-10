@@ -77,6 +77,24 @@
           <summary><span>Device settings</span><span class="expand-icon" aria-hidden="true"></span></summary>
           <div class="settings-content">
             <form id="device-form" class="wifi-form">
+              <label class="wifi-field" for="device-hostname">Hostname
+                <input id="device-hostname" name="hostname" type="text" maxlength="63" pattern="[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?" value="pandadesk" required autocomplete="off" spellcheck="false">
+              </label>
+              <p class="wifi-note muted">Used for the device name and its local network address. Changing it restarts the device.</p>
+              <label class="wifi-field" for="led-brightness"><span>Power LED brightness <output id="led-brightness-value" class="range-value" for="led-brightness">100%</output></span>
+                <input id="led-brightness" name="led_brightness" type="range" min="0" max="100" value="100">
+              </label>
+              <button id="device-save" type="submit">Save device settings</button>
+              <p id="device-message" class="help" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+        </details>
+      </section>
+      <section class="card settings-card">
+        <details class="settings-details">
+          <summary><span>Desk settings</span><span class="expand-icon" aria-hidden="true"></span></summary>
+          <div class="settings-content">
+            <form id="desk-form" class="wifi-form">
               <label class="wifi-field" for="desk-profile">Desk profile
                 <select id="desk-profile" name="profile">
                   <option value="">Not configured</option>
@@ -85,16 +103,16 @@
                   <option value="loctek_flexispot_rj45">Loctek / FlexiSpot RJ45 (unqualified)</option>
                 </select>
               </label>
-              <div id="desk-model-field" hidden>
+              <div id="desk-model-field">
                 <label class="wifi-field" for="desk-model">Desk model
-                  <select id="desk-model" name="model">
+                  <select id="desk-model" name="model" disabled>
                     <option value="">Select a model</option>
                   </select>
                 </label>
                 <select id="desk-model-rj12-options" hidden>
                   <option value="">Select a model</option>
                     <option value="JCB35M11C">Jiecang JCB35M11C</option>
-                    <option value="JCHT35K72C">Jiecang JCHT35K72C (target-height movement unsupported)</option>
+<option value="JCHT35K72C">Jiecang JCHT35K72C</option>
                     <option value="JCB36N2CA">Jiecang JCB36N2CA</option>
                     <option value="JCB36N2CA-230">Jiecang JCB36N2CA-230</option>
                     <option value="JCB36N2HAG-230">Jiecang JCB36N2HAG-230</option>
@@ -106,16 +124,23 @@
                 <select id="desk-model-rj45-options" hidden>
                     <option value="">Select a model</option>
                     <option value="FullyCB2C-A">FullyCB2C-A (Jarvis)</option>
-                    <option value="JCB35N2">Jiecang JCB35N2</option>
+                    <option value="JCB35N2" disabled>Jiecang JCB35N2 (not implemented)</option>
+                </select>
+                <select id="desk-model-loctek-options" hidden>
+                  <option value="">Select a model</option>
+                  <option value="FLEXISPOT_E7_PRO_PLUS">FlexiSpot E7 Pro Plus (HS13M-1C0 / CB38M2L)</option>
+                  <option value="FLEXISPOT_E7_PRO" disabled>FlexiSpot E7 Pro (not verified)</option>
+                  <option value="FLEXISPOT_E7" disabled>FlexiSpot E7 (not verified)</option>
+                  <option value="FLEXISPOT_E7Q" disabled>FlexiSpot E7Q (not verified)</option>
+                  <option value="FLEXISPOT_E5" disabled>FlexiSpot E5 (not verified)</option>
+                  <option value="FLEXISPOT_E6" disabled>FlexiSpot E6 (not verified)</option>
+                  <option value="FLEXISPOT_E8" disabled>FlexiSpot E8 (not verified)</option>
                 </select>
               </div>
               <label class="wifi-field" for="min-height">Minimum height (cm)<input id="min-height" type="number" min="0" max="200" step="0.1" value="60.0" required></label>
               <label class="wifi-field" for="max-height">Maximum height (cm)<input id="max-height" type="number" min="0" max="200" step="0.1" value="125.0" required></label>
-              <label class="wifi-field" for="led-brightness"><span>Power LED brightness <output id="led-brightness-value" class="range-value" for="led-brightness">100%</output></span>
-                <input id="led-brightness" name="led_brightness" type="range" min="0" max="100" value="100">
-              </label>
-              <button id="device-save" type="submit">Save device settings</button>
-              <p id="device-message" class="help" role="status" aria-live="polite"></p>
+              <button id="desk-save" type="submit">Save desk settings</button>
+              <p id="desk-message" class="help" role="status" aria-live="polite"></p>
             </form>
           </div>
         </details>
@@ -219,7 +244,7 @@
   "expires_ms": 1000
  }</pre></div><div><h3>Response · 202 Accepted</h3><pre>{
   "accepted": true
- }</pre></div><p class="api-note">direction is up, down, or stop. Up/down run for expires_ms (1–5000 ms) and then send STOP automatically. Stop takes priority over queued API moves.</p></div>
+ }</pre></div><p class="api-note">direction is up, down, or stop. Up/down run for expires_ms (1–5000 ms) and then stop automatically. Stop takes priority over queued API moves.</p></div>
       </div></details></section>
       <section class="card settings-card api-card"><details class="settings-details"><summary><span>Move desk to a target height</span><span class="expand-icon" aria-hidden="true"></span></summary><div class="settings-content">
         <div class="api-endpoint"><span class="api-method">POST</span><code>/api/v1/commands/height</code></div><div class="api-content"><div><h3>Request · application/json</h3><pre>{
@@ -227,7 +252,7 @@
   "height_cm": 72.5
  }</pre></div><div><h3>Response · 202 Accepted</h3><pre>{
   "accepted": true
- }</pre></div><p class="api-note">height_cm must have one decimal and be within the saved limits. Out-of-range requests return 400 with height_out_of_range. Requires the saved FullyCB2C-A profile and successful startup.</p></div>
+ }</pre></div><p class="api-note">height_cm must have one decimal and be within the saved limits. Out-of-range requests return 400 with height_out_of_range. Target-height control is unavailable for Loctek/FlexiSpot and JCHT35K72C.</p></div>
       </div></details></section>
     </div>
   </main>
@@ -297,6 +322,7 @@
         const response = await fetch('/api/v1/settings/device', {cache: 'no-store'});
         if (!response.ok) throw new Error('Could not load device settings.');
         const settings = await response.json();
+        $('#device-hostname').value = settings.hostname || 'pandadesk';
         $('#desk-profile').value = settings.profile || '';
         updateDeskModelField();
         $('#desk-model').value = settings.model || '';
@@ -316,13 +342,19 @@
       const previous = model.value;
       const choices = profile === 'jiecang_rj12'
         ? $('#desk-model-rj12-options').options
-        : profile === 'jiecang_jarvis_rj45' ? $('#desk-model-rj45-options').options : null;
-      const showModel = choices !== null;
-      $('#desk-model-field').hidden = !showModel;
-      model.disabled = !showModel;
-      if (!showModel) return;
+        : profile === 'jiecang_jarvis_rj45' ? $('#desk-model-rj45-options').options
+        : profile === 'loctek_flexispot_rj45' ? $('#desk-model-loctek-options').options : null;
+      model.disabled = !profile;
+      if (choices === null) {
+        model.replaceChildren(new Option('Select a model', ''));
+        return;
+      }
       const placeholder = new Option('Select a model', '');
-      const options = Array.from(choices).slice(1).map(option => new Option(option.text, option.value));
+      const options = Array.from(choices).slice(1).map(option => {
+        const copy = new Option(option.text, option.value);
+        copy.disabled = option.disabled;
+        return copy;
+      });
       model.replaceChildren(placeholder, ...options);
       model.value = options.some(option => option.value === previous) ? previous : '';
     }
@@ -382,12 +414,9 @@
     async function saveDeviceSettings(event) {
       event.preventDefault();
       const button = $('#device-save');
-      const minHeight = Number($('#min-height').value);
-      const maxHeight = Number($('#max-height').value);
-      if (!Number.isFinite(minHeight) || !Number.isFinite(maxHeight) || minHeight < 0 || maxHeight > 200 ||
-          minHeight >= maxHeight || Math.abs(minHeight * 10 - Math.round(minHeight * 10)) > 1e-7 ||
-          Math.abs(maxHeight * 10 - Math.round(maxHeight * 10)) > 1e-7) {
-        setText('#device-message', 'Enter minimum and maximum heights with one decimal; the minimum must be lower.');
+      const hostname = $('#device-hostname').value.trim();
+      if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(hostname)) {
+        setText('#device-message', 'Use 1–63 letters, numbers, or hyphens; the hostname cannot start or end with a hyphen.');
         return;
       }
       button.disabled = true;
@@ -395,20 +424,49 @@
       try {
         const response = await fetch('/api/v1/settings/device', {
           method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({hostname, led_brightness: Number($('#led-brightness').value)})
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error('Could not save device settings.');
+        setText('#device-message', result.rebooting
+          ? 'Hostname saved. The device is restarting; reconnect using the new hostname.'
+          : 'Device settings saved.');
+      } catch (error) {
+        setText('#device-message', error.message);
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function saveDeskSettings(event) {
+      event.preventDefault();
+      const button = $('#desk-save');
+      const minHeight = Number($('#min-height').value);
+      const maxHeight = Number($('#max-height').value);
+      if (!Number.isFinite(minHeight) || !Number.isFinite(maxHeight) || minHeight < 0 || maxHeight > 200 ||
+          minHeight >= maxHeight || Math.abs(minHeight * 10 - Math.round(minHeight * 10)) > 1e-7 ||
+          Math.abs(maxHeight * 10 - Math.round(maxHeight * 10)) > 1e-7) {
+        setText('#desk-message', 'Enter minimum and maximum heights with one decimal; the minimum must be lower.');
+        return;
+      }
+      button.disabled = true;
+      setText('#desk-message', 'Saving settings…');
+      try {
+        const response = await fetch('/api/v1/settings/device', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
             profile: $('#desk-profile').value,
             model: $('#desk-model').value,
-            led_brightness: Number($('#led-brightness').value),
             min_height_cm: minHeight,
             max_height_cm: maxHeight
           })
         });
         const result = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(result.error === 'invalid_device_settings' ? 'Check the profile and model, LED brightness, and height limits.' : 'Could not save device settings.');
+        if (!response.ok) throw new Error(result.error === 'invalid_device_settings' ? 'Check the desk profile, model, and height limits.' : 'Could not save desk settings.');
         setTargetHeightBounds(minHeight, maxHeight);
-        setText('#device-message', 'Settings saved. LED brightness is applied now; desk controls stay disabled until a profile is qualified.');
+        setText('#desk-message', 'Desk settings saved.');
       } catch (error) {
-        setText('#device-message', error.message);
+        setText('#desk-message', error.message);
       } finally {
         button.disabled = false;
       }
@@ -455,7 +513,7 @@
           ? 'Enter a broker host when MQTT is enabled and a valid port from 1 to 65535.'
           : 'Could not save MQTT settings.');
         $('#mqtt-password').value = '';
-        setText('#mqtt-message', 'Settings saved.');
+        setText('#mqtt-message', 'Settings saved. The broker connection is restarting.');
         await loadMqttSettings();
       } catch (error) {
         setText('#mqtt-message', error.message);
@@ -620,6 +678,7 @@
     $('#target-go').addEventListener('click', sendTargetHeight);
     $('#wifi-form').addEventListener('submit', saveWifiSettings);
     $('#device-form').addEventListener('submit', saveDeviceSettings);
+    $('#desk-form').addEventListener('submit', saveDeskSettings);
     $('#desk-profile').addEventListener('change', updateDeskModelField);
     $('#led-brightness').addEventListener('input', updateLedBrightnessLabel);
     $('#mqtt-form').addEventListener('submit', saveMqttSettings);
