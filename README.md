@@ -11,7 +11,7 @@ The board provides dedicated connectors for three common desk-interface families
 
 ## Features
 
-- ESP32-C6-MINI-1-N4 with Wi-Fi, Bluetooth LE, and native USB
+- ESP32-C6-WROOM-1-N8 with 8 MB flash, Wi-Fi, Bluetooth LE, and native USB
 - Jiecang RJ12 / 6P6C IN and OUT ports
 - Jiecang/Jarvis RJ45 / 8P8C IN and OUT ports
 - Loctek/FlexiSpot RJ45 / 8P8C IN and OUT ports
@@ -65,6 +65,36 @@ When PandaDesk is connected to a supported free accessory port, only the corresp
 > [!NOTE]
 > The handset transmit path is not a passive bypass. The board must be powered and the firmware must be running for inline handset commands to reach the controller.
 
+## Flash layout and builds
+
+The `pandadesk-c6` environment targets ESP32-C6-WROOM-1-N8 with 8 MB flash.
+`boards/pandadesk-c6.json`, `sdkconfig.defaults`, and `partitions.csv` define
+the board, flash size, and partition layout.
+
+| Partition | Offset | Size |
+|---|---:|---:|
+| NVS | `0x9000` | 24 KiB |
+| OTA metadata | `0xF000` | 8 KiB |
+| PHY initialization | `0x11000` | 4 KiB |
+| App / OTA slot 0 | `0x20000` | 3 MiB |
+| App / OTA slot 1 | `0x320000` | 3 MiB |
+| LittleFS web UI | `0x620000` | 1,664 KiB |
+| Coredump | `0x7C0000` | 256 KiB |
+
+The final partition ends at `0x800000` (8 MiB). Firmware OTA has two app
+slots; the web UI currently uses one LittleFS partition.
+
+From the `firmware` directory, build firmware with `pio run -e pandadesk-c6`
+and the filesystem image with `pio run -e pandadesk-c6 -t buildfs`.
+For an existing checkout with a generated `sdkconfig.pandadesk-c6`, select
+8 MB flash using `pio run -e pandadesk-c6 -t menuconfig`; defaults only apply
+to settings that are not already saved.
+
+When migrating a board from the old 4 MB layout, flash the bootloader,
+partition table, firmware, and newly built LittleFS image over USB/UART.
+An application-only OTA update does not install the new partition layout.
+Use this layout on the N8 hardware with 8 MB flash.
+
 ## Firmware architecture
 
 Firmware is organized around desk profiles. Each profile defines:
@@ -80,18 +110,39 @@ Firmware is organized around desk profiles. Each profile defines:
 
 The firmware needs two simultaneous receive paths and one transmit path:
 
-| Signal | ESP32-C6 GPIO | Purpose |
-|---|---:|---|
-| `E_TX` | 19 | UART output to the desk controller |
-| `E_RX` | 18 | UART input from the desk controller |
-| `E_RX_HANDSET` | 5 | Separate UART input from the original handset |
-| `EN_TX` | 15 | Common enable for the UART translator |
-| `E_WAKE` | 14 | Loctek wake output |
-| `E_HS0` | 23 | Jiecang open-drain control 0 |
-| `E_HS1` | 22 | Jiecang open-drain control 1 |
-| `E_HS2` | 21 | Jiecang open-drain control 2 |
-| `E_HS3` | 20 | Jiecang open-drain control 3 |
-| `LED` | 7 | Status LED |
+| Signal | ESP32-C6 GPIO | WROOM module pad | Purpose |
+|---|---:|---:|---|
+| `E_TX` | 19 | 17 | UART output to the desk controller |
+| `E_RX` | 18 | 16 | UART input from the desk controller |
+| `E_RX_HANDSET` | 5 | 5 | Separate UART input from the original handset |
+| `EN_TX` | 15 | 23 | Common enable for the UART translator |
+| `E_WAKE` | 10 | 11 | Loctek wake output |
+| `E_HS0` | 23 | 21 | Jiecang open-drain control 0 |
+| `E_HS1` | 22 | 20 | Jiecang open-drain control 1 |
+| `E_HS2` | 21 | 19 | Jiecang open-drain control 2 |
+| `E_HS3` | 20 | 18 | Jiecang open-drain control 3 |
+| `LED` | 7 | 7 | Status LED |
+| `SDA` | 0 | 8 | I²C data |
+| `SCL` | 1 | 9 | I²C clock |
+| USB D− | 12 | 13 | USB data through R18 = 22 Ω |
+| USB D+ | 13 | 14 | USB data through R17 = 22 Ω |
+| BOOT / `IO9` | 9 | 15 | R11 = 10 kΩ to 3.3 V; button to GND |
+| `IO8` | 8 | 10 | R19 = 10 kΩ to 3.3 V for download mode |
+| `TXD` / TXD0 | 16 | 25 | Programming UART output |
+| `RXD` / RXD0 | 17 | 24 | Programming UART input |
+
+GPIO numbers and physical module pad numbers are different. Firmware GPIO
+assignments are defined in [pins.hpp](include/pandadesk/pins.hpp).
+The WROOM-1 does not expose GPIO14, so `E_WAKE` now uses GPIO10.
+
+Connect 3.3 V to pad 2, EN to pad 3, and GND to pads 1, 28, and exposed
+pad 29; leave NC pad 22 unconnected. Libraries may split the exposed ground
+pad into pads 29–37; verify their symbol-to-footprint mapping and ground all
+subpads. Retain EN's R12 = 10 kΩ pull-up to 3.3 V, C10 = 1 µF to GND, and
+RESET button to GND. GPIO8's R19 is a separate pull-up: at reset, download
+mode requires GPIO8 HIGH and GPIO9 LOW; normal flash boot requires GPIO9
+HIGH and accepts either GPIO8 level. See the
+[Espressif WROOM datasheet](https://documentation.espressif.com/esp32-c6-wroom-1_wroom-1u_datasheet_en.html).
 
 `EN_TX` enables the translator's transmit output and both receive outputs together. It must remain enabled while waiting for handset UART activity. Pulling it low also prevents the ESP32 from receiving the handset and controller UART signals.
 

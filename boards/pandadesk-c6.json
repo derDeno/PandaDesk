@@ -1,5 +1,5 @@
 {
-  "name": "PandaDesk ESP32-C6 (4 MB)",
+  "name": "PandaDesk ESP32-C6-WROOM-1-N8 (8 MB)",
   "vendor": "PandaBoards",
   "url": "https://github.com/derDeno/PandaDesk",
   "frameworks": ["espidf"],
@@ -9,11 +9,11 @@
     "f_cpu": "160000000L",
     "f_flash": "80000000L",
     "flash_mode": "qio",
-    "flash_size": "4MB"
+    "flash_size": "8MB"
   },
   "upload": {
-    "flash_size": "4MB",
-    "maximum_size": 1507328,
+    "flash_size": "8MB",
+    "maximum_size": 3145728,
     "maximum_ram_size": 327680,
     "speed": 460800
   },
