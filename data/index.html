@@ -3,54 +3,115 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#111827">
+  <meta name="theme-color" content="#111111">
   <title>PandaDesk</title>
   <style>
-    :root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;color:#eef2f7;background:#111827;font-synthesis:none}
+    :root{color-scheme:dark;font:16px/1.5 system-ui,sans-serif;color:#f5f5f5;background:#111111;font-synthesis:none}
     *{box-sizing:border-box}body{min-height:100vh;max-width:1000px;margin:0 auto;padding:24px;display:flex;flex-direction:column}
-    h1,h2,h3,p{margin-top:0}h1{font-size:1.8rem;margin-bottom:2px}h2{font-size:1.1rem;margin-bottom:14px}h3{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin:0 0 8px}
-    .header{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}.brand{display:flex;align-items:center}.muted{color:#abb6c5}
-    .nav{display:flex;gap:5px}.nav a{color:#cbd5e1;text-decoration:none;border-radius:7px;padding:7px 12px}.nav a:hover{background:#334155}.nav a[aria-current="page"]{background:#334155;color:#fff}.nav a:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{min-width:0;background:#1f2937;border:1px solid #374151;border-radius:14px;padding:20px}
-    .state-banner{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;background:#392d16;border:1px solid #8b641d;color:#fde68a;margin:0}.state-symbol{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:#fbbf24;color:#111827;font-weight:800}.state-banner strong{display:block;color:#fef3c7}.state-banner p{margin:2px 0 0;color:#e5d4aa;font-size:.92rem}
-    .settings-card{grid-column:1/-1}.settings-details summary{display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;list-style:none;font-size:1.1rem;font-weight:700}.settings-details summary::-webkit-details-marker{display:none}.settings-details summary:focus-visible{outline:3px solid #60a5fa;outline-offset:4px;border-radius:4px}.expand-icon{width:10px;height:10px;flex:none;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease}.settings-details[open] .expand-icon{transform:rotate(45deg)}.settings-content{margin-top:18px}
-    .details{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 12px;margin:0}.details dt{color:#abb6c5}.details dd{margin:0;overflow-wrap:anywhere}
-    .wifi-form{display:grid;gap:14px;width:100%}.wifi-field{display:grid;gap:6px;font-weight:600}.wifi-field input:not([type="range"]),.wifi-field select{width:100%;font:inherit;color:inherit;border:1px solid #4b5563;border-radius:8px;padding:10px 12px;background:#111827}.wifi-field input:focus-visible,.wifi-field select:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}.wifi-field input[type="range"]{width:100%;margin:8px 0 14px;accent-color:#3b82f6}.wifi-field>span{display:flex;justify-content:flex-start;align-items:center;gap:6px}.range-value{font-weight:400;color:#abb6c5}.wifi-note{margin:0;font-size:.85rem}#mqtt-fields:not([hidden]){display:grid;gap:14px}.wifi-form>button{width:fit-content;justify-self:start}.wifi-form button[type="submit"]{background:#2563eb;border-color:#3b82f6}.wifi-form button[type="submit"]:hover:not(:disabled){background:#1d4ed8}.danger-button{background:#7f1d1d;border-color:#b91c1c;color:#fee2e2}.danger-button:hover{background:#991b1b}.danger-button:focus-visible{outline-color:#f87171}dialog{max-width:min(440px,calc(100vw - 32px));border:1px solid #4b5563;border-radius:14px;padding:24px;background:#1f2937;color:#eef2f7}dialog::backdrop{background:#0009}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.check-field{display:flex;align-items:center;gap:10px}.check-field input{accent-color:#3b82f6}
-    .wifi-form{display:grid;gap:14px;width:100%}.wifi-field{display:grid;gap:6px;font-weight:600}.wifi-field input:not([type="range"]),.wifi-field select{width:100%;font:inherit;color:inherit;border:1px solid #4b5563;border-radius:8px;padding:10px 12px;background:#111827}.wifi-field input:focus-visible,.wifi-field select:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}.wifi-field input[type="range"]{width:100%;margin:8px 0 14px;accent-color:#3b82f6}.wifi-field>span{display:flex;justify-content:flex-start;align-items:center;gap:6px}.range-value{font-weight:400;color:#abb6c5}.wifi-note{margin:0;font-size:.85rem}#mqtt-fields:not([hidden]){display:grid;gap:14px}.wifi-form>button{width:fit-content;justify-self:start}.wifi-form button[type="submit"]{background:#2563eb;border-color:#3b82f6}.wifi-form button[type="submit"]:hover:not(:disabled),.primary-button:hover:not(:disabled){background:#1d4ed8}.primary-button{background:#2563eb;border-color:#3b82f6}.height-controls{display:grid;gap:10px;margin-top:18px}.target-row{display:flex;align-items:center;gap:10px}.target-row input[type="number"]{flex:1;min-width:0;font:inherit;color:inherit;border:1px solid #4b5563;border-radius:8px;padding:10px 12px;background:#111827}.target-row input:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}.target-row button{min-width:64px}.height-controls input[type="range"]{width:100%;accent-color:#3b82f6}.target-error{margin:0;color:#fca5a5;font-size:.9rem}.danger-button{background:#7f1d1d;border-color:#b91c1c;color:#fee2e2}.danger-button:hover{background:#991b1b}.danger-button:focus-visible{outline-color:#f87171}dialog{max-width:min(440px,calc(100vw - 32px));border:1px solid #4b5563;border-radius:14px;padding:24px;background:#1f2937;color:#eef2f7}dialog::backdrop{background:#0009}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.check-field{display:flex;align-items:center;gap:10px}.check-field input{accent-color:#3b82f6}
-    .controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.control-tooltip{position:relative;display:block}.controls button,button{font:inherit;color:inherit;border:1px solid #4b5563;border-radius:9px;padding:11px;background:#334155}.controls button{width:100%}button:focus-visible{outline:3px solid #60a5fa;outline-offset:2px}button:disabled{opacity:.45;cursor:not-allowed}.controls button:not(:disabled){cursor:pointer}.controls button:not(:disabled):hover{background:#475569}.control-tooltip::after{content:attr(data-tooltip);position:absolute;z-index:2;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);width:max-content;max-width:min(260px,80vw);padding:8px 10px;border:1px solid #4b5563;border-radius:7px;background:#111827;color:#eef2f7;font-size:.82rem;line-height:1.35;text-align:center;box-shadow:0 4px 14px #0005;opacity:0;visibility:hidden;pointer-events:none}.control-tooltip:hover::after,.control-tooltip:focus-within::after{opacity:1;visibility:visible}.help{margin:12px 0 0;font-size:.9rem}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-    .api-card{grid-column:1/-1}.api-endpoint{display:flex;align-items:center;gap:10px;margin-bottom:14px}.api-endpoint code{overflow-wrap:anywhere;color:#c4b5fd}.api-method{flex:none;padding:3px 8px;border-radius:6px;background:#111827;color:#93c5fd;font-size:.8rem;font-weight:700}.api-content{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.api-content h3{margin-bottom:6px}.api-content pre{overflow:auto;margin:0;padding:12px;border:1px solid #374151;border-radius:8px;background:#111827;color:#d1d5db;font:.82rem/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}.api-note{grid-column:1/-1;margin:0;color:#abb6c5;font-size:.9rem}
-    main{flex:1}.footer{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:auto;padding-top:18px;color:#7f8b9c;font-size:.85rem}.repo-link{display:inline-flex;align-items:center;gap:6px;color:#abb6c5;text-decoration:none}.repo-link:hover{color:#fff}.repo-link:focus-visible{outline:3px solid #60a5fa;outline-offset:3px;border-radius:3px}.repo-link svg{width:16px;height:16px;fill:currentColor}
-    @media(max-width:680px){body{padding:16px}.grid,.api-content{grid-template-columns:1fr}.header{align-items:flex-start;flex-direction:column}.details{grid-template-columns:120px minmax(0,1fr)}}
+    h1,h2,h3,p{margin-top:0}h1{font-size:1.8rem;margin-bottom:2px}h2{font-size:1.1rem;margin-bottom:14px}h3{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:#a3a3a3;margin:0 0 8px}
+    .header{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}.brand{display:flex;align-items:center;gap:10px}.brand svg{width:36px;height:36px;flex:none;fill:currentColor}.muted{color:#b5b5b5}
+    .nav{display:flex;gap:5px}.nav a{font-weight:500;color:#d4d4d4;text-decoration:none;border-radius:7px;padding:7px 12px}.nav a:hover{background:#333333}.nav a[aria-current="page"]{background:#f5f5f5;color:#111111}.nav a:focus-visible{outline:3px solid #ffffff;outline-offset:2px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{min-width:0;background:#202020;border:1px solid #3d3d3d;border-radius:14px;padding:20px}
+    .state-banner{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;background:#392d16;border:1px solid #8b641d;color:#fde68a;margin:0}.state-symbol{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:50%;background:#fbbf24;color:#111111;font-weight:800}.state-banner strong{display:block;color:#fef3c7}.state-banner p{margin:2px 0 0;color:#e5d4aa;font-size:.92rem}
+    .state-banner[hidden]{display:none}
+    .settings-card{grid-column:1/-1}.settings-details summary{display:flex;align-items:center;justify-content:space-between;gap:16px;cursor:pointer;list-style:none;font-size:1.1rem;font-weight:700}.settings-details summary::-webkit-details-marker{display:none}.settings-details summary:focus-visible{outline:3px solid #ffffff;outline-offset:4px;border-radius:4px}.expand-icon{width:10px;height:10px;flex:none;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease}.settings-details[open] .expand-icon{transform:rotate(45deg)}.settings-content{margin-top:18px}
+    #desk-connection{font-weight:700;color:#ef4444}#desk-connection[data-connected="true"]{color:#22c55e}
+    .details{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 12px;margin:0}.details[hidden]{display:none}.details dt{color:#b5b5b5}.details dd{margin:0;overflow-wrap:anywhere}
+    .wifi-form{display:grid;gap:14px;width:100%}.wifi-field{display:grid;gap:6px;font-weight:600}.wifi-field input:not([type="range"]),.wifi-field select{width:100%;font:inherit;color:inherit;border:1px solid #737373;border-radius:8px;padding:10px 12px;background:#111111}.wifi-field input:focus-visible,.wifi-field select:focus-visible{outline:3px solid #ffffff;outline-offset:2px}.wifi-field input[type="range"]{width:100%;margin:8px 0 14px;accent-color:#f5f5f5}.wifi-field>span{display:flex;justify-content:flex-start;align-items:center;gap:6px}.range-value{font-weight:400;color:#b5b5b5}.wifi-note{margin:0;font-size:.85rem;font-weight:400}#mqtt-fields:not([hidden]){display:grid;gap:14px}.wifi-form>button{width:fit-content;justify-self:start}.wifi-form button[type="submit"]{background:#f5f5f5;border-color:#f5f5f5;color:#111111}.wifi-form button[type="submit"]:hover:not(:disabled){background:#d4d4d4}.danger-button{background:#7f1d1d;border-color:#b91c1c;color:#fee2e2}.danger-button:hover{background:#991b1b}.danger-button:focus-visible{outline-color:#f87171}dialog{max-width:min(440px,calc(100vw - 32px));border:1px solid #737373;border-radius:14px;padding:24px;background:#202020;color:#f5f5f5}dialog::backdrop{background:#0009}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.check-field{display:flex;align-items:center;gap:10px}.check-field input{accent-color:#f5f5f5}
+    .wifi-form{display:grid;gap:14px;width:100%}.wifi-field{display:grid;gap:6px;font-weight:600}.wifi-field input:not([type="range"]),.wifi-field select{width:100%;font:inherit;color:inherit;border:1px solid #737373;border-radius:8px;padding:10px 12px;background:#111111}.wifi-field input:focus-visible,.wifi-field select:focus-visible{outline:3px solid #ffffff;outline-offset:2px}.wifi-field input[type="range"]{width:100%;margin:8px 0 14px;accent-color:#f5f5f5}.wifi-field>span{display:flex;justify-content:flex-start;align-items:center;gap:6px}.range-value{font-weight:400;color:#b5b5b5}.wifi-note{margin:0;font-size:.85rem;font-weight:400}#mqtt-fields:not([hidden]){display:grid;gap:14px}.wifi-form>button{width:fit-content;justify-self:start}.wifi-form button[type="submit"]{background:#f5f5f5;border-color:#f5f5f5;color:#111111}.wifi-form button[type="submit"]:hover:not(:disabled),.primary-button:hover:not(:disabled){background:#d4d4d4}.primary-button{background:#f5f5f5;border-color:#f5f5f5;color:#111111}.height-controls{display:grid;gap:10px;margin-top:18px}.target-row{display:flex;align-items:center;gap:10px}.target-row input[type="number"]{flex:1;min-width:0;font:inherit;color:inherit;border:1px solid #737373;border-radius:8px;padding:10px 12px;background:#111111}.target-row input:focus-visible{outline:3px solid #ffffff;outline-offset:2px}.target-row button{min-width:64px}.height-controls input[type="range"]{width:100%;margin:12px 0;accent-color:#f5f5f5}.target-error{margin:0;color:#fca5a5;font-size:.9rem}.danger-button{background:#7f1d1d;border-color:#b91c1c;color:#fee2e2}.danger-button:hover{background:#991b1b}.danger-button:focus-visible{outline-color:#f87171}dialog{max-width:min(440px,calc(100vw - 32px));border:1px solid #737373;border-radius:14px;padding:24px;background:#202020;color:#f5f5f5}dialog::backdrop{background:#0009}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.check-field{display:flex;align-items:center;gap:10px}.check-field input{accent-color:#f5f5f5}
+    .controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.control-tooltip{position:relative;display:block}.controls button,button{font:inherit;font-weight:500;color:inherit;border:1px solid #737373;border-radius:9px;padding:11px;background:#333333}.controls button{width:100%}button:focus-visible{outline:3px solid #ffffff;outline-offset:2px}button:disabled{opacity:.45;cursor:not-allowed}button:not(:disabled){cursor:pointer}.controls button:not(:disabled):hover{background:#4a4a4a}.control-tooltip::after{content:attr(data-tooltip);position:absolute;z-index:2;left:50%;bottom:calc(100% + 8px);transform:translateX(-50%);width:max-content;max-width:min(260px,80vw);padding:8px 10px;border:1px solid #737373;border-radius:7px;background:#111111;color:#f5f5f5;font-size:.82rem;line-height:1.35;text-align:center;box-shadow:0 4px 14px #0005;opacity:0;visibility:hidden;pointer-events:none}.control-tooltip:hover::after,.control-tooltip:focus-within::after{opacity:1;visibility:visible}.help{margin:12px 0 0;font-size:.9rem}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .controls button[data-direction="stop"]{background:#b91c1c;border-color:#ef4444;color:#fff}.controls button[data-direction="stop"]:hover:not(:disabled){background:#991b1b}
+    .controls button[data-direction]{touch-action:none;user-select:none;-webkit-user-select:none}
+    #child-lock-control{display:flex;align-items:center;justify-content:center;gap:8px}.button-icon{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    main{flex:1}.footer{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:auto;padding-top:18px;color:#a3a3a3;font-size:1rem}.repo-link{display:inline-flex;align-items:center;gap:8px;color:#b5b5b5;text-decoration:none}.repo-link:hover{color:#fff}.repo-link:focus-visible{outline:3px solid #ffffff;outline-offset:3px;border-radius:3px}.repo-link svg{width:20px;height:20px;fill:currentColor}
+    #home-page .grid{align-items:start}.home-status,.home-controls{display:grid;gap:18px;min-width:0;align-content:start}.preset-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.preset-controls button{display:grid;gap:2px;min-width:0;text-align:left}.preset-controls button:hover:not(:disabled),#preset-save-submit:hover:not(:disabled){background:#4a4a4a;border-color:#a3a3a3}.preset-name{font-size:1.1rem;font-weight:500}.preset-height{font-size:.85rem;color:#b5b5b5}.preset-save{margin-top:14px}.preset-save summary{width:fit-content;color:#b5b5b5;cursor:pointer;font-size:.9rem}.preset-save summary:hover{color:#fff;text-decoration:underline}.preset-save summary:focus-visible{outline:3px solid #fff;outline-offset:4px;border-radius:3px}.preset-save-form{display:grid;gap:10px;margin-top:12px}.preset-save-form p{margin:0;font-size:.85rem;color:#b5b5b5}.status-group+.status-group{border-top:1px solid #3d3d3d;margin-top:18px;padding-top:14px}.alert{padding:14px;border:1px solid;border-radius:10px;margin-bottom:18px;overflow-wrap:anywhere}.alert-success{background:#143b2a;border-color:#22c55e;color:#dcfce7}.alert-error{background:#451a1a;border-color:#ef4444;color:#fee2e2}.alert-info{background:#3c2e16;border-color:#eab308;color:#fef3c7}.alert a{color:#facc15;font-weight:600}.help:empty{display:none}
+    .toast-stack{position:fixed;z-index:1000;top:max(16px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));width:min(440px,calc(100% - 32px));display:grid;gap:10px;pointer-events:none}.toast-stack .alert{position:relative;margin:0;padding-right:56px;box-shadow:0 8px 28px #0006;pointer-events:auto;animation:toast-in .2s ease-out}.toast-close{position:absolute;top:6px;right:6px;display:grid;place-items:center;width:36px;height:36px;padding:0;border:0;border-radius:50%;background:transparent;font-size:1.4rem;line-height:1;cursor:pointer}.toast-close:hover{background:#ffffff1a}.toast-close-icon{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;pointer-events:none}.toast-countdown{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);pointer-events:none}.toast-countdown[hidden]{display:none}.toast-countdown svg{display:block;width:100%;height:100%}.toast-countdown circle{fill:none;stroke:currentColor;stroke-width:2}.toast-countdown-track{opacity:.2}.toast-countdown-fill{stroke-dasharray:100;stroke-dashoffset:100;stroke-linecap:round}@keyframes toast-in{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}@media(prefers-reduced-motion:reduce){.toast-stack .alert{animation:none}}
+    #filesystem-form{margin-top:28px;padding-top:24px;border-top:1px solid #3d3d3d}#update-dialog,#restart-dialog{width:440px}.update-progress-label{display:flex;justify-content:space-between;gap:12px;margin-top:18px}.update-progress-label output{color:#b5b5b5}#update-dialog progress{display:block;width:100%;height:14px;margin-top:8px;accent-color:#f5f5f5}#update-message,#restart-message{margin:18px 0 0}#update-message.error,#restart-message.error{color:#fca5a5}
+    .info-toolbar{display:flex;justify-content:flex-start;margin-bottom:20px}#info-refresh{display:inline-flex;align-items:center;gap:8px}#info-status:not([hidden]){margin-bottom:20px}.info-grid{display:grid;gap:22px;grid-template-columns:repeat(2,minmax(0,1fr))}.info-grid .status-group{min-width:0;margin:0;padding:0;border:0}.info-grid .details{grid-template-columns:minmax(100px,1fr) minmax(0,1.2fr);font-size:.9rem}@media(max-width:680px){.info-grid{grid-template-columns:1fr}}
+    .version-status{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px}.update-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid #28794b;border-radius:999px;background:#143b2a;color:#86efac;font-size:.75rem;text-decoration:none;white-space:nowrap}.update-badge[hidden]{display:none}.update-badge .button-icon{width:14px;height:14px}.update-badge:hover{background:#1a4b36;color:#bbf7d0}.update-badge:focus-visible{outline:3px solid #86efac;outline-offset:2px}.alert-success a{color:#86efac}
+    .logs-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}.logs-toolbar .check-field{margin-right:auto}#logs-output{height:55vh;min-height:240px;overflow:auto;margin:14px 0 0;padding:14px;border:1px solid #3d3d3d;border-radius:8px;background:#111111;color:#d4d4d4;font:13px/1.5 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere}#logs-output:focus-visible{outline:3px solid #ffffff;outline-offset:2px}.logs-actions{display:flex;align-items:center;gap:12px;margin-left:auto}.logs-badge{display:inline-flex;align-items:center;gap:7px;padding:4px 9px;border:1px solid #525252;border-radius:999px;background:#292929;color:#b5b5b5;font-size:.8rem;white-space:nowrap}.logs-dot{width:7px;height:7px;border-radius:50%;background:currentColor}.logs-badge[data-live="true"]{border-color:#28794b;background:#143b2a;color:#86efac}.logs-badge[data-live="true"] .logs-dot{background:#4ade80;animation:logs-live-pulse 1.5s ease-out infinite}@keyframes logs-live-pulse{0%{box-shadow:0 0 0 0 #4ade8070}100%{box-shadow:0 0 0 6px #4ade8000}}@media(prefers-reduced-motion:reduce){.logs-badge[data-live="true"] .logs-dot{animation:none}}
+    @media(max-width:680px){body{padding:16px}.grid{grid-template-columns:1fr}.header{align-items:flex-start;flex-direction:column}.details{grid-template-columns:120px minmax(0,1fr)}}
   </style>
 </head>
 <body>
   <header class="header">
-    <div class="brand"><h1>PandaDesk</h1></div>
-    <nav class="nav" aria-label="Main menu"><a href="#home" data-page="home" aria-current="page">Home</a><a href="#api" data-page="api">API</a><a href="#settings" data-page="settings">Settings</a></nav>
+    <div class="brand">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 94.22 84.59" aria-hidden="true" focusable="false">
+        <path d="M49.8,82.35c-13.89-0.61-24.22-2.52-32.84-9.2C5.21,64.03,4.23,51.28,6.19,37.81c0.2-1.35,0.45-2.75,0.99-3.99
+          c1.38-3.2,0.63-5.87-1.15-8.77C1.22,17.21,3,9.01,10.12,4.87c4.09-2.38,8.43-2.67,12.55-0.51c4.5,2.35,8.85,2.55,13.73,1.35
+          c7.24-1.79,14.53-1.39,21.91,0.04c3.17,0.61,6.92-0.14,10.03-1.29c4.16-1.53,8.12-2.55,12.32-0.79c8.36,3.5,11.18,13.01,5.96,20.95
+          c-1.67,2.54-1.77,4.58-0.74,7.26c2.96,7.67,3.21,15.63,1.7,23.62c-2.11,11.2-9.13,18.63-19.45,22.42
+          C61.31,80.43,53.93,81.39,49.8,82.35z M47.12,9.2C47.12,9.2,47.21,9.53,47.12,9.2c-6.09,0.6-12.11,1.3-17.34,3.86
+          C14.59,20.46,7.05,38.09,10.96,54.87c2.31,9.9,8.41,16.07,17.86,19.39c12.57,4.41,25.05,4.01,37.43-0.46
+          c6.18-2.23,11.08-6.21,14.08-12.2C90.09,42.09,78.86,8.93,47.12,9.2z"/>
+        <path d="M63.1,33.44c9.15-0.03,18.66,10.3,17.91,19.45c-0.36,4.43-2.13,7.94-6.5,9.62c-4.37,1.68-8.29,0.36-11.34-2.7
+          c-3.23-3.25-6.11-6.91-8.76-10.66c-2.28-3.24-2.81-7.11-0.72-10.62C55.71,35.13,59.01,33.36,63.1,33.44z M62.12,47.3
+          c2.61-0.33,4.29-1.64,4.07-4.35c-0.21-2.64-2.21-4.32-4.53-3.73c-1.54,0.39-3.37,2.5-3.7,4.12C57.42,46.04,59.64,47.13,62.12,47.3z"/>
+        <path d="M30.04,34.25c8.08,0.08,12.5,7.38,8.28,14.31c-4.52,6.21-10.38,17.04-19.6,12.9C5.11,54.41,17.89,33.64,30.04,34.25z
+          M35.21,43.4c1.23-5.76-5.19-6.37-7.86-2.27C25.08,46.46,34.09,47.81,35.21,43.4z"/>
+        <path d="M46.61,61.29c-3.72,0-6.59-2.22-6.69-5.17c-0.11-3.1,2.87-5.55,6.73-5.54c3.74,0.01,6.57,2.22,6.69,5.2
+          C53.45,58.93,50.57,61.29,46.61,61.29z"/>
+        <path d="M46.75,71.28c-3.33-1.65-6.19-2.94-8.89-4.51c-0.55-0.32-0.52-1.66-0.75-2.53c0.87,0.05,2-0.22,2.57,0.22
+          c4.73,3.6,9.31,3.58,14-0.07c0.55-0.43,1.69-0.09,2.55-0.11c-0.18,0.77-0.11,1.97-0.58,2.25C52.87,68.18,49.95,69.61,46.75,71.28z"/>
+      </svg>
+      <h1>PandaDesk</h1>
+    </div>
+    <nav class="nav" aria-label="Main menu"><a href="#home" data-page="home" aria-current="page">Home</a><a href="#info" data-page="info">Info</a><a href="#settings" data-page="settings">Settings</a></nav>
   </header>
+  <div class="toast-stack">
+    <div id="settings-toast" class="alert alert-success" role="status" aria-live="polite" aria-atomic="true" hidden><span id="toast-message"></span><button id="toast-close" class="toast-close" type="button" aria-label="Dismiss notification"><span id="toast-countdown" class="toast-countdown" aria-hidden="true" hidden><svg viewBox="0 0 36 36"><circle class="toast-countdown-track" cx="18" cy="18" r="15"></circle><circle id="toast-countdown-fill" class="toast-countdown-fill" cx="18" cy="18" r="15" pathLength="100"></circle></svg></span><svg class="toast-close-icon" viewBox="0 0 36 36" aria-hidden="true"><path d="M13 13L23 23M23 13L13 23"></path></svg></button></div>
+    <div id="mdns-notice" class="alert alert-info" role="status" hidden><span>Connected to your local Wi-Fi.<br>Open <a id="mdns-link"></a></span><button id="mdns-close" class="toast-close" type="button" aria-label="Dismiss network notice"><svg class="toast-close-icon" viewBox="0 0 36 36" aria-hidden="true"><path d="M13 13L23 23M23 13L13 23"></path></svg></button></div>
+    <div id="updates-toast" class="alert alert-success" role="status" aria-live="polite" hidden><span id="updates-toast-message"></span> <a id="updates-toast-link" target="_blank" rel="noopener noreferrer">View release</a><button id="updates-toast-close" class="toast-close" type="button" aria-label="Dismiss update notification"><svg class="toast-close-icon" viewBox="0 0 36 36" aria-hidden="true"><path d="M13 13L23 23M23 13L13 23"></path></svg></button></div>
+  </div>
 
   <main id="home-page">
     <div class="grid">
-      <div class="state-banner" role="status" aria-live="polite">
+      <div id="desk-setup-notice" class="state-banner" role="status" aria-live="polite">
         <div class="state-symbol" aria-hidden="true">!</div>
-        <div><strong id="state-label">Safe, not configured</strong><p id="state-message">Waiting for device status…</p></div>
+        <div><strong id="state-label">Checking desk setup</strong><p id="state-message">Waiting for device status…</p></div>
       </div>
+      <div class="home-status">
       <section class="card">
         <h2>Desk status</h2>
         <dl class="details">
+          <dt>Connection</dt><dd id="desk-connection" role="status" aria-live="polite">Disconnected</dd>
           <dt>Desk profile</dt><dd id="profile">—</dd>
           <dt>Height</dt><dd id="height">—</dd>
           <dt>Movement</dt><dd id="movement">—</dd>
           <dt>Child lock</dt><dd id="locked">—</dd>
-          <dt>State sequence</dt><dd id="sequence">—</dd>
         </dl>
       </section>
 
+      <section class="card" aria-labelledby="presets-title">
+        <h2 id="presets-title">Saved presets</h2>
+        <div class="preset-controls" aria-label="Saved desk presets">
+          <button id="preset-1" type="button" disabled><span class="preset-name">Preset 1</span><span id="preset-height-1" class="preset-height">—</span></button>
+          <button id="preset-2" type="button" disabled><span class="preset-name">Preset 2</span><span id="preset-height-2" class="preset-height">—</span></button>
+          <button id="preset-3" type="button" disabled><span class="preset-name">Preset 3</span><span id="preset-height-3" class="preset-height">—</span></button>
+          <button id="preset-4" type="button" disabled><span class="preset-name">Preset 4</span><span id="preset-height-4" class="preset-height">—</span></button>
+        </div>
+        <details id="preset-save-details" class="preset-save">
+          <summary>Save current height…</summary>
+          <form id="preset-save-form" class="preset-save-form">
+            <label class="wifi-field" for="preset-save-slot">Save to preset
+              <select id="preset-save-slot" aria-describedby="preset-save-help" disabled>
+                <option value="1">Preset 1</option><option value="2">Preset 2</option><option value="3">Preset 3</option><option value="4">Preset 4</option>
+              </select>
+            </label>
+            <p id="preset-save-help">Overwrites the selected preset with the desk's current height.</p>
+            <button id="preset-save-submit" type="submit" disabled>Overwrite selected preset</button>
+          </form>
+        </details>
+        <p id="preset-help" class="help"></p>
+      </section>
+      </div>
+
+      <div class="home-controls">
       <section class="card">
         <h2>Desk controls</h2>
         <div class="controls" aria-label="Desk movement controls">
           <span class="control-tooltip" data-tooltip="Controls unlock when a qualified desk profile and command transport are available."><button type="button" data-direction="up" aria-describedby="control-help" disabled>Up</button></span>
-          <span class="control-tooltip" data-tooltip="Controls unlock when a qualified desk profile and command transport are available."><button type="button" data-direction="stop" aria-describedby="control-help" disabled>Stop</button></span>
+          <button type="button" data-direction="stop" disabled>Stop</button>
           <span class="control-tooltip" data-tooltip="Controls unlock when a qualified desk profile and command transport are available."><button type="button" data-direction="down" aria-describedby="control-help" disabled>Down</button></span>
         </div>
         <div class="height-controls">
@@ -63,10 +124,92 @@
           <input id="target-height-slider" type="range" min="60.0" max="125.0" step="0.1" value="60.0" aria-label="Target height" disabled>
           <p id="target-height-error" class="target-error" role="alert" hidden></p>
         </div>
+        <div class="height-controls"><button id="child-lock-control" class="primary-button" type="button" disabled><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path id="child-lock-shackle" d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg><span id="child-lock-label">Lock desk</span></button></div>
         <p id="control-help" class="sr-only">Controls unlock when a qualified desk profile and command transport are available.</p>
-        <p id="command-message" class="help" role="status" aria-live="polite"></p>
       </section>
 
+      </div>
+
+    </div>
+  </main>
+
+  <main id="info-page" hidden>
+    <div class="grid">
+      <section class="card settings-card" aria-labelledby="info-title">
+        <details id="info-details" class="settings-details" open>
+          <summary><span id="info-title">Device information</span><span class="expand-icon" aria-hidden="true"></span></summary>
+          <div class="settings-content">
+            <div class="info-toolbar"><button id="info-refresh" type="button"><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6.1 6.1A8 8 0 0 1 19.6 10M4.4 14a8 8 0 0 0 13.5 3.9"></path></svg>Refresh</button></div>
+            <p id="info-status" class="target-error" role="status" hidden></p>
+            <div class="info-grid">
+              <section class="status-group">
+                <h3>Board &amp; hardware</h3>
+                <dl class="details">
+                  <dt>Firmware target</dt><dd id="info-target">—</dd>
+                  <dt>PCB revision</dt><dd id="info-revision">—</dd>
+                  <dt>CPU cores</dt><dd id="info-cores">—</dd>
+                  <dt>Configured CPU speed</dt><dd id="info-cpu">—</dd>
+                  <dt>Detected flash size</dt><dd id="info-flash">—</dd>
+                </dl>
+              </section>
+              <section class="status-group">
+                <h3>Software</h3>
+                <dl class="details">
+                  <dt>Firmware version</dt><dd class="version-status"><span id="status-firmware-version">—</span><a id="firmware-update" class="update-badge" target="_blank" rel="noopener noreferrer" hidden><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"></path></svg>Update available</a></dd>
+                  <dt>Filesystem version</dt><dd class="version-status"><span id="status-filesystem-version">—</span><a id="filesystem-update" class="update-badge" target="_blank" rel="noopener noreferrer" hidden><svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"></path></svg>Update available</a></dd>
+                </dl>
+              </section>
+              <section class="status-group">
+                <h3>Runtime &amp; memory</h3>
+                <dl class="details">
+                  <dt>Uptime</dt><dd id="device-uptime">—</dd>
+                  <dt>Last reset reason</dt><dd id="info-reset">—</dd>
+                  <dt>Free heap</dt><dd id="info-heap-free">—</dd>
+                  <dt>Minimum free heap</dt><dd id="info-heap-min">—</dd>
+                </dl>
+              </section>
+              <section class="status-group">
+                <h3>Network</h3>
+                <dl class="details">
+                  <dt>Mode</dt><dd id="network-mode">—</dd>
+                  <dt>Wi-Fi</dt><dd id="network-ssid">—</dd>
+                  <dt>Signal strength</dt><dd id="network-rssi">—</dd>
+                  <dt>Hostname</dt><dd id="network-hostname">—</dd>
+                  <dt>IP address</dt><dd id="network-ip">—</dd>
+                  <dt>MAC address</dt><dd id="network-mac">—</dd>
+                </dl>
+              </section>
+              <section class="status-group">
+                <h3>Home Assistant / MQTT</h3>
+                <p id="mqtt-status-message" class="muted">Not configured yet</p>
+                <dl id="mqtt-status-details" class="details" hidden>
+                  <dt>Connection</dt><dd id="mqtt-status-connection">—</dd>
+                  <dt>Broker</dt><dd id="mqtt-status-broker">—</dd>
+                  <dt>State topic</dt><dd id="mqtt-status-state-topic">—</dd>
+                  <dt>Availability topic</dt><dd id="mqtt-status-availability-topic">—</dd>
+                </dl>
+              </section>
+            </div>
+          </div>
+        </details>
+      </section>
+      <section class="card settings-card" aria-labelledby="logs-title">
+        <details id="logs-details" class="settings-details">
+          <summary><span id="logs-title">Logs</span><span class="expand-icon" aria-hidden="true"></span></summary>
+          <div class="settings-content">
+            <p class="muted">Recent device output from this boot. The device keeps the latest 8 KiB in memory; older output is overwritten and logs clear on restart.</p>
+            <div class="logs-toolbar">
+              <button id="logs-pause" type="button" aria-pressed="false">Pause</button>
+              <label class="check-field"><input id="logs-autoscroll" type="checkbox" checked>Auto-scroll</label>
+              <div class="logs-actions">
+                <span id="logs-status" class="logs-badge" role="status" data-live="false"><span class="logs-dot" aria-hidden="true"></span><span id="logs-status-label">Inactive</span></span>
+                <button id="logs-download" type="button">Download logs</button>
+              </div>
+            </div>
+            <pre id="logs-output" tabindex="0" aria-label="Device log output"></pre>
+          </div>
+        </details>
+      </section>
     </div>
   </main>
 
@@ -77,15 +220,15 @@
           <summary><span>Device settings</span><span class="expand-icon" aria-hidden="true"></span></summary>
           <div class="settings-content">
             <form id="device-form" class="wifi-form">
-              <label class="wifi-field" for="device-hostname">Hostname
-                <input id="device-hostname" name="hostname" type="text" maxlength="63" pattern="[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?" value="pandadesk" required autocomplete="off" spellcheck="false">
-              </label>
-              <p class="wifi-note muted">Used for the device name and its local network address. Changing it restarts the device.</p>
-              <label class="wifi-field" for="led-brightness"><span>Power LED brightness <output id="led-brightness-value" class="range-value" for="led-brightness">100%</output></span>
-                <input id="led-brightness" name="led_brightness" type="range" min="0" max="100" value="100">
+              <div class="wifi-field">
+                <label for="device-hostname">Local hostname</label>
+                <p id="device-hostname-note" class="wifi-note muted">The local hostname is assigned automatically. Network device name: <span id="dhcp-hostname">—</span></p>
+                <input id="device-hostname" type="text" placeholder="pandadesk.local" aria-describedby="device-hostname-note" readonly>
+              </div>
+              <label class="wifi-field" for="led-brightness"><span>Power LED brightness <output id="led-brightness-value" class="range-value" for="led-brightness">50%</output></span>
+                <input id="led-brightness" name="led_brightness" type="range" min="0" max="100" value="50">
               </label>
               <button id="device-save" type="submit">Save device settings</button>
-              <p id="device-message" class="help" role="status" aria-live="polite"></p>
             </form>
           </div>
         </details>
@@ -98,7 +241,7 @@
               <label class="wifi-field" for="desk-profile">Desk profile
                 <select id="desk-profile" name="profile">
                   <option value="">Not configured</option>
-                  <option value="jiecang_rj12">Jiecang RJ12 (unqualified)</option>
+                  <option value="jiecang_rj12">Jiecang RJ12 / Maidesite</option>
                   <option value="jiecang_jarvis_rj45">Jiecang / Jarvis RJ45 (unqualified)</option>
                   <option value="loctek_flexispot_rj45">Loctek / FlexiSpot RJ45 (unqualified)</option>
                 </select>
@@ -111,15 +254,8 @@
                 </label>
                 <select id="desk-model-rj12-options" hidden>
                   <option value="">Select a model</option>
-                    <option value="JCB35M11C">Jiecang JCB35M11C</option>
-<option value="JCHT35K72C">Jiecang JCHT35K72C</option>
-                    <option value="JCB36N2CA">Jiecang JCB36N2CA</option>
-                    <option value="JCB36N2CA-230">Jiecang JCB36N2CA-230</option>
-                    <option value="JCB36N2HAG-230">Jiecang JCB36N2HAG-230</option>
-                    <option value="JCHT35K9-003-v4">Jiecang JCHT35K9-003-v4</option>
-                    <option value="JCB36NE2">Jiecang JCB36NE2</option>
-                    <option value="JCB36M">Jiecang JCB36M</option>
-                    <option value="JCB36NE2A-230">Jiecang JCB36NE2A-230</option>
+                  <option value="JIECANG_GENERIC">Generic Jiecang RJ12 / Maidesite</option>
+                  <option value="JCHT35K72C">Jiecang JCHT35K72C (no target-height control)</option>
                 </select>
                 <select id="desk-model-rj45-options" hidden>
                     <option value="">Select a model</option>
@@ -128,19 +264,18 @@
                 </select>
                 <select id="desk-model-loctek-options" hidden>
                   <option value="">Select a model</option>
-                  <option value="FLEXISPOT_E7_PRO_PLUS">FlexiSpot E7 Pro Plus (HS13M-1C0 / CB38M2L)</option>
-                  <option value="FLEXISPOT_E7_PRO" disabled>FlexiSpot E7 Pro (not verified)</option>
-                  <option value="FLEXISPOT_E7" disabled>FlexiSpot E7 (not verified)</option>
-                  <option value="FLEXISPOT_E7Q" disabled>FlexiSpot E7Q (not verified)</option>
                   <option value="FLEXISPOT_E5" disabled>FlexiSpot E5 (not verified)</option>
                   <option value="FLEXISPOT_E6" disabled>FlexiSpot E6 (not verified)</option>
+                  <option value="FLEXISPOT_E7" disabled>FlexiSpot E7 (not verified)</option>
+                  <option value="FLEXISPOT_E7_PRO" disabled>FlexiSpot E7 Pro (not verified)</option>
+                  <option value="FLEXISPOT_E7_PRO_PLUS">FlexiSpot E7 Pro Plus (HS13M-1C0 / CB38M2L)</option>
+                  <option value="FLEXISPOT_E7Q" disabled>FlexiSpot E7Q (not verified)</option>
                   <option value="FLEXISPOT_E8" disabled>FlexiSpot E8 (not verified)</option>
                 </select>
               </div>
               <label class="wifi-field" for="min-height">Minimum height (cm)<input id="min-height" type="number" min="0" max="200" step="0.1" value="60.0" required></label>
               <label class="wifi-field" for="max-height">Maximum height (cm)<input id="max-height" type="number" min="0" max="200" step="0.1" value="125.0" required></label>
               <button id="desk-save" type="submit">Save desk settings</button>
-              <p id="desk-message" class="help" role="status" aria-live="polite"></p>
             </form>
           </div>
         </details>
@@ -151,10 +286,12 @@
           <div class="settings-content">
             <form id="wifi-form" class="wifi-form">
               <label class="wifi-field" for="wifi-ssid">Network name (SSID)<input id="wifi-ssid" name="ssid" type="text" maxlength="32" autocomplete="ssid" required></label>
-              <label class="wifi-field" for="wifi-password">Password<input id="wifi-password" name="password" type="password" maxlength="63" minlength="8" autocomplete="new-password"></label>
-              <p id="wifi-password-note" class="wifi-note muted">Leave the password blank to connect to an open network. Saved passwords are never shown.</p>
+              <div class="wifi-field">
+                <label for="wifi-password">Password</label>
+                <p id="wifi-password-note" class="wifi-note muted">Leave the password blank to connect to an open network. Saved passwords are never shown.</p>
+                <input id="wifi-password" name="password" type="password" maxlength="63" minlength="8" autocomplete="new-password" aria-describedby="wifi-password-note">
+              </div>
               <button id="wifi-save" type="submit">Save and reboot</button>
-              <p id="wifi-message" class="help" role="status" aria-live="polite"></p>
             </form>
           </div>
         </details>
@@ -172,7 +309,6 @@
                 <label class="wifi-field" for="mqtt-password">Password<input id="mqtt-password" type="password" maxlength="63" autocomplete="new-password" disabled></label>
               </div>
               <button id="mqtt-save" type="submit">Save MQTT settings</button>
-              <p id="mqtt-message" class="help" role="status" aria-live="polite"></p>
             </form>
           </div>
         </details>
@@ -181,18 +317,14 @@
         <details class="settings-details">
           <summary><span>Firmware update</span><span class="expand-icon" aria-hidden="true"></span></summary>
           <div class="settings-content">
+            <p class="muted">Install firmware or WebUI filesystem images (.bin). Keep the device powered until it restarts.</p>
             <form id="firmware-form" class="wifi-form">
-              <p class="muted">Firmware version: <span id="firmware-version">—</span><br>Filesystem version: <span id="filesystem-version">—</span></p>
-              <label class="wifi-field" for="firmware-file">PandaDesk firmware image (.bin)<input id="firmware-file" type="file" accept=".bin,application/octet-stream" required></label>
-              <p class="wifi-note muted">Choose a PandaDesk firmware image and select Install. Your saved settings will stay on the device; it will reboot after installation.</p>
-              <button id="firmware-upload" type="submit">Install firmware</button>
-              <p id="firmware-message" class="help" role="status" aria-live="polite"></p>
+              <label class="wifi-field" for="firmware-file">Firmware file<input id="firmware-file" type="file" accept=".bin,application/octet-stream" required></label>
+              <button id="firmware-upload" type="submit">Upload and install</button>
             </form>
             <form id="filesystem-form" class="wifi-form">
-              <label class="wifi-field" for="filesystem-file">PandaDesk filesystem image (.bin)<input id="filesystem-file" type="file" accept=".bin,application/octet-stream" required></label>
-              <p class="wifi-note muted">Choose the LittleFS image built with <code>pio run -e pandadesk-c6 -t buildfs</code>. The device will reboot after installation.</p>
-              <button id="filesystem-upload" type="submit">Install filesystem</button>
-              <p id="filesystem-message" class="help" role="status" aria-live="polite"></p>
+              <label class="wifi-field" for="filesystem-file">Filesystem file<input id="filesystem-file" type="file" accept=".bin,application/octet-stream" required></label>
+              <button id="filesystem-upload" type="submit">Upload filesystem</button>
             </form>
           </div>
         </details>
@@ -207,55 +339,25 @@
           </div>
         </details>
       </section>
+      <div class="settings-card">
+        <button id="restart-device" type="button">Restart device</button>
+      </div>
     </div>
   </main>
-  <main id="api-page" hidden>
-    <div class="grid">
-      <section class="card settings-card api-card"><details class="settings-details"><summary><span>Read device state</span><span class="expand-icon" aria-hidden="true"></span></summary><div class="settings-content">
-        <div class="api-endpoint"><span class="api-method">GET</span><code>/api/v1/state</code></div><div class="api-content"><div><h3>Request</h3><pre>No body</pre></div><div><h3>Response · 200 OK</h3><pre>{
-  "state": "READY",
-  "profile": "jiecang_jarvis_rj45",
-  "ready": true,
-  "height": {
-    "value": null,
-    "quality": "unknown"
-  },
-  "moving": null,
-  "locked": null,
-  "sequence": 1,
-  "firmware_version": "0.1.0",
-  "filesystem_version": "0.1.0"
-}</pre></div></div>
-      </div></details></section>
-      <section class="card settings-card api-card"><details class="settings-details"><summary><span>Read capabilities</span><span class="expand-icon" aria-hidden="true"></span></summary><div class="settings-content">
-        <div class="api-endpoint"><span class="api-method">GET</span><code>/api/v1/capabilities</code></div><div class="api-content"><div><h3>Request</h3><pre>No body</pre></div><div><h3>Response · 200 OK</h3><pre>{
-  "profile_configured": true,
-  "move": true,
-  "stop": true,
-  "target_height": true,
-  "presets": false,
-  "child_lock": false
-}</pre></div></div>
-      </div></details></section>
-      <section class="card settings-card api-card"><details class="settings-details"><summary><span>Move desk up, down, or stop</span><span class="expand-icon" aria-hidden="true"></span></summary><div class="settings-content">
-        <div class="api-endpoint"><span class="api-method">POST</span><code>/api/v1/commands/move</code></div><div class="api-content"><div><h3>Request · application/json</h3><pre>{
-  "request_id": "unique-id",
-  "direction": "up",
-  "expires_ms": 1000
- }</pre></div><div><h3>Response · 202 Accepted</h3><pre>{
-  "accepted": true
- }</pre></div><p class="api-note">direction is up, down, or stop. Up/down run for expires_ms (1–5000 ms) and then stop automatically. Stop takes priority over queued API moves.</p></div>
-      </div></details></section>
-      <section class="card settings-card api-card"><details class="settings-details"><summary><span>Move desk to a target height</span><span class="expand-icon" aria-hidden="true"></span></summary><div class="settings-content">
-        <div class="api-endpoint"><span class="api-method">POST</span><code>/api/v1/commands/height</code></div><div class="api-content"><div><h3>Request · application/json</h3><pre>{
-  "request_id": "unique-id",
-  "height_cm": 72.5
- }</pre></div><div><h3>Response · 202 Accepted</h3><pre>{
-  "accepted": true
- }</pre></div><p class="api-note">height_cm must have one decimal and be within the saved limits. Out-of-range requests return 400 with height_out_of_range. Target-height control is unavailable for Loctek/FlexiSpot and JCHT35K72C.</p></div>
-      </div></details></section>
-    </div>
-  </main>
+  <dialog id="update-dialog" aria-labelledby="update-title" aria-describedby="update-message">
+    <h2 id="update-title">Installing update</h2>
+    <label class="update-progress-label" for="upload-progress">Upload <output id="upload-percent">0%</output></label>
+    <progress id="upload-progress" max="100" value="0"></progress>
+    <label class="update-progress-label" for="install-progress">Installation <output id="install-status">Waiting</output></label>
+    <progress id="install-progress" max="100" value="0"></progress>
+    <p id="update-message" role="status" aria-live="polite" aria-atomic="true"></p>
+    <div class="dialog-actions"><button id="update-close" type="button" hidden>Close</button></div>
+  </dialog>
+  <dialog id="restart-dialog" aria-labelledby="restart-title" aria-describedby="restart-message">
+    <h2 id="restart-title">Restarting device</h2>
+    <p id="restart-message" role="status" aria-live="polite" aria-atomic="true"></p>
+    <div class="dialog-actions"><button id="restart-close" type="button" hidden>Close</button></div>
+  </dialog>
   <dialog id="reset-dialog" aria-labelledby="reset-dialog-title">
     <form method="dialog">
       <h2 id="reset-dialog-title">Reset PandaDesk?</h2>
@@ -276,9 +378,161 @@
   <script>
     const $ = selector => document.querySelector(selector);
     const setText = (selector, value) => { $(selector).textContent = value; };
+    let settingsToastTimer;
+    let settingsToastProgress;
+    function clearSettingsToast() {
+      clearTimeout(settingsToastTimer);
+      settingsToastProgress?.cancel();
+      settingsToastProgress = null;
+      $('#toast-countdown').hidden = true;
+      $('#settings-toast').hidden = true;
+      $('#toast-message').textContent = '';
+    }
+    function showSettingsToast(message, kind = 'success') {
+      clearSettingsToast();
+      const toast = $('#settings-toast');
+      toast.className = `alert alert-${kind}`;
+      $('#toast-message').textContent = message;
+      toast.hidden = false;
+      if (kind === 'success') {
+        const duration = 5000;
+        $('#toast-countdown').hidden = false;
+        settingsToastProgress = $('#toast-countdown-fill').animate(
+          [{strokeDashoffset: '100'}, {strokeDashoffset: '0'}], {duration, easing: 'linear', fill: 'forwards'});
+        settingsToastTimer = setTimeout(clearSettingsToast, duration);
+        if (toast.matches(':hover, :focus-within')) pauseSettingsToast();
+      }
+    }
+
+    function pauseSettingsToast() {
+      if (settingsToastProgress?.playState !== 'running') return;
+      clearTimeout(settingsToastTimer);
+      settingsToastProgress.pause();
+    }
+
+    function resumeSettingsToast() {
+      if (settingsToastProgress?.playState !== 'paused' || $('#settings-toast').matches(':hover, :focus-within')) return;
+      const remaining = settingsToastProgress.effect.getTiming().duration - (settingsToastProgress.currentTime || 0);
+      settingsToastProgress.play();
+      settingsToastTimer = setTimeout(clearSettingsToast, Math.max(0, remaining));
+    }
+
+    let installedVersions = {};
+    let latestRelease = null;
+    let updateCheckStarted = false;
+    let updateToastShown = false;
+
+    function parseVersion(value) {
+      if (typeof value !== 'string') return null;
+      const match = /^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(value);
+      if (!match) return null;
+      if (match[4]?.split('.').some(part => /^0\d+$/.test(part))) return null;
+      const numbers = match.slice(1, 4).map(Number);
+      return numbers.every(Number.isSafeInteger) ? {numbers, prerelease: match[4] || ''} : null;
+    }
+
+    function isNewerVersion(candidate, installed) {
+      const next = parseVersion(candidate);
+      const current = parseVersion(installed);
+      if (!next || !current || next.prerelease) return false;
+      for (let index = 0; index < 3; index++) {
+        if (next.numbers[index] !== current.numbers[index]) return next.numbers[index] > current.numbers[index];
+      }
+      return Boolean(current.prerelease);
+    }
+
+    function showAvailableUpdates() {
+      const updates = {};
+      const tag = parseVersion(latestRelease?.tag_name);
+      if (tag && !tag.prerelease && !latestRelease.draft && !latestRelease.prerelease && Array.isArray(latestRelease.assets)) {
+        for (const asset of latestRelease.assets) {
+          if (!asset || asset.state !== 'uploaded' || !(asset.size > 0) || typeof asset.name !== 'string') continue;
+          const match = /^PandaDesk_(firmware|filesystem)_v(.+)\.bin$/.exec(asset.name);
+          if (!match) continue;
+          const [, kind, version] = match;
+          if (isNewerVersion(version, installedVersions[kind]) && (!updates[kind] || isNewerVersion(version, updates[kind]))) {
+            updates[kind] = version;
+          }
+        }
+      }
+      const releaseUrl = tag ? `https://github.com/derDeno/PandaDesk/releases/tag/${encodeURIComponent(latestRelease.tag_name)}` : '';
+      for (const kind of ['firmware', 'filesystem']) {
+        const badge = $(`#${kind}-update`);
+        badge.hidden = !updates[kind];
+        if (updates[kind]) {
+          badge.href = releaseUrl;
+          badge.title = `${kind === 'firmware' ? 'Firmware' : 'Filesystem'} v${updates[kind]} is available`;
+        }
+      }
+      if (Object.keys(updates).length) {
+        setText('#updates-toast-message', `Update available: ${Object.entries(updates).map(([kind, version]) => `${kind} v${version}`).join(' and ')}.`);
+        $('#updates-toast-link').href = releaseUrl;
+        if (!updateToastShown) {
+          $('#updates-toast').hidden = false;
+          updateToastShown = true;
+        }
+      } else $('#updates-toast').hidden = true;
+    }
+
+    async function checkForUpdates() {
+      if (updateCheckStarted) return;
+      updateCheckStarted = true;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      try {
+        const response = await fetch('https://api.github.com/repos/derDeno/PandaDesk/releases/latest', {
+          headers: {Accept: 'application/vnd.github+json'}, credentials: 'omit', referrerPolicy: 'no-referrer',
+          cache: 'no-store', signal: controller.signal
+        });
+        if (!response.ok) return;
+        latestRelease = await response.json();
+        showAvailableUpdates();
+      } catch {
+        // Offline, timeouts and GitHub rate limits leave update indicators hidden until the next page load.
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    function showDeviceStatus(state) {
+      const network = state.network || {};
+      const hostname = network.hostname ? `${network.hostname}.local` : '';
+      setText('#network-mode', network.mode === 'ap' ? 'Setup access point' : network.connected ? 'Connected' : 'Disconnected');
+      setText('#network-ssid', network.ssid || '—');
+      const signal = network.rssi >= -50 ? 'Excellent' : network.rssi >= -60 ? 'Good'
+        : network.rssi >= -70 ? 'Fair' : network.rssi >= -80 ? 'Weak' : 'Very weak';
+      setText('#network-rssi', network.connected && Number.isFinite(network.rssi) ? `${signal} (${network.rssi} dBm)` : '—');
+      setText('#network-hostname', hostname || '—');
+      setText('#network-ip', network.ip || '—');
+      setText('#network-mac', network.mac || '—');
+      setText('#status-firmware-version', state.firmware_version || 'unknown');
+      setText('#status-filesystem-version', state.filesystem_version || 'unknown');
+      installedVersions = {firmware: state.firmware_version, filesystem: state.filesystem_version};
+      showAvailableUpdates();
+      const uptime = Number.isFinite(state.uptime) && state.uptime >= 0 ? Math.floor(state.uptime) : null;
+      setText('#device-uptime', uptime === null ? '—' : `${Math.floor(uptime / 3600)}h ${Math.floor(uptime / 60) % 60}m ${uptime % 60}s`);
+      const usingIp = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(location.hostname) || location.hostname.includes(':');
+      const showMdns = network.connected === true && network.mdns_available === true && hostname && usingIp;
+      $('#mdns-notice').hidden = !showMdns;
+      if (showMdns) {
+        $('#mdns-link').textContent = hostname;
+        $('#mdns-link').href = `http://${hostname}/`;
+      }
+    }
     function setControlHelp(text) {
       setText('#control-help', text);
       document.querySelectorAll('.control-tooltip').forEach(tooltip => { tooltip.dataset.tooltip = text; });
+    }
+
+    function showMqttStatus(mqtt = {}) {
+      const connected = mqtt.connected === true;
+      $('#mqtt-status-message').hidden = connected;
+      setText('#mqtt-status-message', 'Not configured yet');
+      $('#mqtt-status-details').hidden = !connected;
+      setText('#mqtt-status-connection', connected ? 'Connected' : '—');
+      setText('#mqtt-status-broker', connected ? `${mqtt.host}:${mqtt.port}` : '—');
+      setText('#mqtt-status-state-topic', connected ? mqtt.state_topic || '—' : '—');
+      setText('#mqtt-status-availability-topic', connected ? mqtt.availability_topic || '—' : '—');
     }
 
     async function loadWifiSettings() {
@@ -291,7 +545,7 @@
           ? 'A password is saved but never shown. Enter it again to replace it, or leave blank for an open network.'
           : 'Leave the password blank to connect to an open network.');
       } catch (error) {
-        if (location.protocol !== 'file:') setText('#wifi-message', error.message);
+        if (location.protocol !== 'file:') showSettingsToast(error.message, 'error');
       }
     }
 
@@ -299,7 +553,7 @@
       event.preventDefault();
       const button = $('#wifi-save');
       button.disabled = true;
-      setText('#wifi-message', 'Saving Wi-Fi settings…');
+      clearSettingsToast();
       try {
         const response = await fetch('/api/v1/settings/wifi', {
           method: 'POST',
@@ -310,11 +564,97 @@
         if (!response.ok) throw new Error(result.error === 'invalid_wifi_settings'
           ? 'Enter an SSID and a password with at least 8 characters, or leave it blank for an open network.'
           : 'Could not save Wi-Fi settings.');
-        setText('#wifi-message', 'Settings saved. The device is rebooting; reconnect using the new network details.');
+        showSettingsToast('Settings saved. The device is rebooting; reconnect using the new network details.');
       } catch (error) {
-        setText('#wifi-message', error.message);
+        showSettingsToast(error.message, 'error');
         button.disabled = false;
       }
+    }
+
+    let savedDeskProfile = null;
+    let deskReady = null;
+    let childLockState = null;
+    let childLockAvailable = false;
+    let childLockPending = null;
+    let deskCapabilities = {};
+    let deskPresets = [];
+    let presetPending = false;
+    function updateMovementControls() {
+      const ready = deskReady === true;
+      const locked = childLockState === true || childLockPending === true;
+      document.querySelectorAll('[data-direction]').forEach(button => {
+        button.disabled = !ready || (button.dataset.direction === 'stop'
+          ? deskCapabilities.stop !== true : locked || deskCapabilities.move !== true);
+      });
+      if (heldMove?.button.disabled) releaseMove(true);
+      setTargetControlsEnabled(deskReady !== null && !locked, ready && !locked && deskCapabilities.target_height === true);
+      const presetsAvailable = ready && !locked && !presetPending && deskCapabilities.presets === true;
+      $('#preset-save-slot').disabled = !presetsAvailable;
+      $('#preset-save-submit').disabled = !presetsAvailable;
+      for (let slot = 1; slot <= 4; slot++) {
+        const height = deskPresets[slot - 1];
+        const inRange = typeof height === 'number' && Number.isFinite(height) && height > 0 &&
+          height >= Number($('#target-height-input').min) && height <= Number($('#target-height-input').max);
+        $(`#preset-${slot}`).disabled = !presetsAvailable || !inRange;
+        setText(`#preset-height-${slot}`, typeof height === 'number' ? `${height.toFixed(1)} cm` : '—');
+      }
+      setText('#preset-help', deskCapabilities.presets === true
+        ? ''
+        : 'Saved presets are unavailable for this controller. Presets require a supported Jiecang RJ12 profile and memory reports from the desk.');
+      setControlHelp(childLockState === true ? 'Child lock is active. Unlock the desk to move it. Stop remains available.'
+        : childLockPending === true ? 'Waiting for child-lock confirmation. Stop remains available.'
+        : ready ? 'Click for a short move, or hold Up or Down and release to stop.'
+        : 'Controls unlock when a qualified desk profile and command transport are available.');
+    }
+
+    function updateChildLockControl() {
+      setText('#child-lock-label', childLockPending !== null
+        ? childLockPending ? 'Locking…' : 'Unlocking…' : childLockState === true ? 'Unlock desk' : 'Lock desk');
+      const unlocking = childLockPending !== null ? !childLockPending : childLockState === true;
+      $('#child-lock-shackle').setAttribute('d', unlocking ? 'M7 11V7a5 5 0 0 1 9.9-1' : 'M7 11V7a5 5 0 0 1 10 0v4');
+      $('#child-lock-control').disabled = !childLockAvailable || childLockState === null || childLockPending !== null;
+      updateMovementControls();
+    }
+
+    async function sendChildLock() {
+      if (!childLockAvailable || childLockState === null || childLockPending !== null) return;
+      const wanted = !childLockState;
+      childLockPending = wanted;
+      clearSettingsToast();
+      updateChildLockControl();
+      try {
+        const response = await fetch('/api/v1/commands/child-lock', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({request_id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, locked: wanted})
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.locked !== wanted) {
+          throw new Error(result.error === 'child_lock_unavailable' ? 'Child-lock control is unavailable.'
+            : 'The desk did not confirm the lock change. Check its current status before trying again.');
+        }
+        childLockState = result.locked;
+        setText('#locked', childLockState ? 'Locked' : 'Unlocked');
+        showSettingsToast(childLockState ? 'Desk locked successfully.' : 'Desk unlocked successfully.');
+      } catch (error) {
+        showSettingsToast(error.message, 'error');
+      } finally {
+        childLockPending = null;
+        updateChildLockControl();
+      }
+    }
+
+    function showDeskSetupStatus() {
+      setText('#desk-connection', deskReady === true ? 'Connected' : 'Disconnected');
+      $('#desk-connection').setAttribute('data-connected', String(deskReady === true));
+      if (deskReady === null) return;
+      $('#desk-setup-notice').hidden = deskReady;
+      setText('#state-label', deskReady ? 'Desk controls ready' : savedDeskProfile === null
+        ? 'Checking desk setup' : savedDeskProfile ? 'Waiting for desk connection' : 'Desk setup required');
+      setText('#state-message', deskReady
+        ? 'Your desk profile is active. You can use the controls below.'
+        : savedDeskProfile === null ? 'Waiting for saved desk settings…'
+        : savedDeskProfile ? 'Your desk profile and model are saved. Waiting for the desk controller to respond. If you just changed desk settings, restart PandaDesk to apply them; otherwise check the desk power and cable connection.'
+        : 'Choose your desk profile and model in Settings → Desk settings, then save and restart PandaDesk. Desk controls are disabled until setup is complete.');
     }
 
     async function loadDeviceSettings() {
@@ -322,17 +662,20 @@
         const response = await fetch('/api/v1/settings/device', {cache: 'no-store'});
         if (!response.ok) throw new Error('Could not load device settings.');
         const settings = await response.json();
-        $('#device-hostname').value = settings.hostname || 'pandadesk';
+        savedDeskProfile = settings.profile && settings.model ? settings.profile : '';
+        showDeskSetupStatus();
+        $('#device-hostname').value = settings.hostname ? `${settings.hostname}.local` : '';
+        setText('#dhcp-hostname', settings.dhcp_hostname || '—');
         $('#desk-profile').value = settings.profile || '';
         updateDeskModelField();
         $('#desk-model').value = settings.model || '';
         $('#min-height').value = Number(settings.min_height_cm ?? 60).toFixed(1);
         $('#max-height').value = Number(settings.max_height_cm ?? 125).toFixed(1);
         setTargetHeightBounds(Number($('#min-height').value), Number($('#max-height').value));
-        $('#led-brightness').value = settings.led_brightness ?? 100;
+        $('#led-brightness').value = settings.led_brightness ?? 50;
         updateLedBrightnessLabel();
       } catch (error) {
-        if (location.protocol !== 'file:') setText('#device-message', error.message);
+        if (location.protocol !== 'file:') showSettingsToast(error.message, 'error');
       }
     }
 
@@ -414,25 +757,17 @@
     async function saveDeviceSettings(event) {
       event.preventDefault();
       const button = $('#device-save');
-      const hostname = $('#device-hostname').value.trim();
-      if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(hostname)) {
-        setText('#device-message', 'Use 1–63 letters, numbers, or hyphens; the hostname cannot start or end with a hyphen.');
-        return;
-      }
       button.disabled = true;
-      setText('#device-message', 'Saving settings…');
+      clearSettingsToast();
       try {
         const response = await fetch('/api/v1/settings/device', {
           method: 'POST', headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({hostname, led_brightness: Number($('#led-brightness').value)})
+          body: JSON.stringify({led_brightness: Number($('#led-brightness').value)})
         });
-        const result = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error('Could not save device settings.');
-        setText('#device-message', result.rebooting
-          ? 'Hostname saved. The device is restarting; reconnect using the new hostname.'
-          : 'Device settings saved.');
+        showSettingsToast('Device settings saved.');
       } catch (error) {
-        setText('#device-message', error.message);
+        showSettingsToast(error.message, 'error');
       } finally {
         button.disabled = false;
       }
@@ -446,11 +781,11 @@
       if (!Number.isFinite(minHeight) || !Number.isFinite(maxHeight) || minHeight < 0 || maxHeight > 200 ||
           minHeight >= maxHeight || Math.abs(minHeight * 10 - Math.round(minHeight * 10)) > 1e-7 ||
           Math.abs(maxHeight * 10 - Math.round(maxHeight * 10)) > 1e-7) {
-        setText('#desk-message', 'Enter minimum and maximum heights with one decimal; the minimum must be lower.');
+        showSettingsToast('Enter minimum and maximum heights with one decimal; the minimum must be lower.', 'error');
         return;
       }
       button.disabled = true;
-      setText('#desk-message', 'Saving settings…');
+      clearSettingsToast();
       try {
         const response = await fetch('/api/v1/settings/device', {
           method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -463,10 +798,12 @@
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(result.error === 'invalid_device_settings' ? 'Check the desk profile, model, and height limits.' : 'Could not save desk settings.');
+        savedDeskProfile = $('#desk-profile').value && $('#desk-model').value ? $('#desk-profile').value : '';
+        showDeskSetupStatus();
         setTargetHeightBounds(minHeight, maxHeight);
-        setText('#desk-message', 'Desk settings saved.');
+        showSettingsToast('Desk settings saved. Restart PandaDesk to apply the desk profile.');
       } catch (error) {
-        setText('#desk-message', error.message);
+        showSettingsToast(error.message, 'error');
       } finally {
         button.disabled = false;
       }
@@ -483,7 +820,7 @@
         $('#mqtt-port').value = settings.port || 1883;
         $('#mqtt-username').value = settings.username || '';
       } catch (error) {
-        if (location.protocol !== 'file:') setText('#mqtt-message', error.message);
+        if (location.protocol !== 'file:') showSettingsToast(error.message, 'error');
       }
     }
 
@@ -496,7 +833,7 @@
       event.preventDefault();
       const button = $('#mqtt-save');
       button.disabled = true;
-      setText('#mqtt-message', 'Saving MQTT settings…');
+      clearSettingsToast();
       try {
         const response = await fetch('/api/v1/settings/mqtt', {
           method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -513,52 +850,128 @@
           ? 'Enter a broker host when MQTT is enabled and a valid port from 1 to 65535.'
           : 'Could not save MQTT settings.');
         $('#mqtt-password').value = '';
-        setText('#mqtt-message', 'Settings saved. The broker connection is restarting.');
+        showSettingsToast('Settings saved. The broker connection is restarting.');
         await loadMqttSettings();
       } catch (error) {
-        setText('#mqtt-message', error.message);
+        showSettingsToast(error.message, 'error');
       } finally {
         button.disabled = false;
       }
     }
 
-    async function uploadFirmware(event) {
+    function reloadCountdown(selector, message) {
+      let seconds = 5;
+      const countdown = () => {
+        setText(selector, `${message} This page will reload in ${seconds} ${seconds === 1 ? 'second' : 'seconds'}.`);
+        if (seconds === 0) {
+          location.reload();
+          return;
+        }
+        seconds--;
+        setTimeout(countdown, 1000);
+      };
+      countdown();
+    }
+
+    let updateBusy = false;
+    async function uploadImage(event, kind) {
       event.preventDefault();
-      const file = $('#firmware-file').files[0];
-      if (!file) return;
-      const button = $('#firmware-upload');
-      button.disabled = true;
-      setText('#firmware-message', 'Uploading and verifying firmware…');
+      const file = $(`#${kind}-file`).files[0];
+      if (!file || updateBusy) return;
+      updateBusy = true;
+      $('#firmware-upload').disabled = true;
+      $('#filesystem-upload').disabled = true;
+      $('#update-close').hidden = true;
+      $('#upload-progress').value = 0;
+      $('#install-progress').value = 0;
+      setText('#upload-percent', '0%');
+      setText('#install-status', 'Waiting');
+      setText('#update-title', kind === 'firmware' ? 'Updating firmware' : 'Updating filesystem');
+      $('#update-message').className = '';
+      setText('#update-message', 'Uploading image. Keep the device powered.');
+      $('#update-dialog').showModal();
       try {
-        const response = await fetch('/api/v1/update/firmware', {
-          method: 'POST', headers: {'Content-Type': 'application/octet-stream'}, body: file
+        await new Promise((resolve, reject) => {
+          const request = new XMLHttpRequest();
+          request.open('POST', `/api/v1/update/${kind}`);
+          request.setRequestHeader('Content-Type', 'application/octet-stream');
+          request.responseType = 'json';
+          request.timeout = 120000;
+          request.upload.onprogress = progress => {
+            if (!progress.lengthComputable || progress.total === 0) return;
+            const percent = Math.min(100, Math.round(progress.loaded / progress.total * 100));
+            $('#upload-progress').value = percent;
+            setText('#upload-percent', `${percent}%`);
+            // The board writes flash while receiving; it supplies no installation percentage.
+            $('#install-progress').removeAttribute('value');
+            setText('#install-status', 'In progress…');
+          };
+          request.upload.onload = () => {
+            $('#upload-progress').value = 100;
+            setText('#upload-percent', '100%');
+            $('#install-progress').removeAttribute('value');
+            setText('#install-status', 'Verifying…');
+            setText('#update-message', 'Upload complete. Finishing installation and verifying the image…');
+          };
+          request.onload = () => {
+            const result = request.response || {};
+            if (request.status >= 200 && request.status < 300 && result.installed === true && result.rebooting === true) {
+              resolve();
+              return;
+            }
+            const errors = {
+              not_pandadesk_firmware: 'This image is not a PandaDesk firmware build.',
+              invalid_firmware_image: 'The firmware image is invalid or incomplete.',
+              invalid_filesystem_image: 'The filesystem image is invalid or incomplete.',
+              invalid_firmware_size: 'The firmware image is empty or too large.',
+              invalid_filesystem_size: 'The filesystem image is empty or too large.',
+              reboot_schedule_failed: 'The image was installed, but automatic reboot failed. Restart the device manually.'
+            };
+            reject(new Error(errors[result.error] || 'Update failed. Check the image and try again.'));
+          };
+          request.onerror = () => reject(new Error('Connection lost during the update. Check the device before retrying.'));
+          request.ontimeout = () => reject(new Error('The update timed out. Check the device before retrying.'));
+          request.send(file);
         });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(result.error === 'not_pandadesk_firmware'
-          ? 'This image is not a PandaDesk firmware build.'
-          : result.error === 'invalid_firmware_image' ? 'The firmware image is invalid or incomplete.' : 'Firmware update failed.');
-        setText('#firmware-message', 'Firmware verified. The device is rebooting into the updated firmware.');
+        $('#upload-progress').value = 100;
+        setText('#upload-percent', '100%');
+        $('#install-progress').value = 100;
+        setText('#install-status', 'Complete');
+        reloadCountdown('#update-message', 'Update installed successfully. The device will reboot.');
       } catch (error) {
-        setText('#firmware-message', error.message);
-        button.disabled = false;
+        updateBusy = false;
+        $('#install-progress').value = 0;
+        setText('#install-status', 'Not completed');
+        $('#update-message').className = 'error';
+        setText('#update-message', error.message);
+        $('#update-close').hidden = false;
+        $('#firmware-upload').disabled = false;
+        $('#filesystem-upload').disabled = false;
       }
     }
 
-    async function uploadFilesystem(event) {
-      event.preventDefault();
-      const file = $('#filesystem-file').files[0];
-      if (!file) return;
-      const button = $('#filesystem-upload');
+    function uploadFirmware(event) { return uploadImage(event, 'firmware'); }
+    function uploadFilesystem(event) { return uploadImage(event, 'filesystem'); }
+
+    async function restartDevice() {
+      const button = $('#restart-device');
+      if (button.disabled) return;
       button.disabled = true;
-      setText('#filesystem-message', 'Uploading and verifying filesystem…');
+      setText('#restart-title', 'Restarting device');
+      $('#restart-message').className = '';
+      $('#restart-close').hidden = true;
+      setText('#restart-message', 'Restarting device...');
+      $('#restart-dialog').showModal();
       try {
-        const response = await fetch('/api/v1/update/filesystem', {
-          method: 'POST', headers: {'Content-Type': 'application/octet-stream'}, body: file
-        });
-        if (!response.ok) throw new Error('Filesystem update failed.');
-        setText('#filesystem-message', 'Filesystem verified. The device is rebooting.');
+        const response = await fetch('/api/v1/device/restart', {method: 'POST'});
+        const result = await response.json();
+        if (!response.ok || result.rebooting !== true) throw new Error('Could not restart device. Please try again.');
+        reloadCountdown('#restart-message', 'The device is restarting.');
       } catch (error) {
-        setText('#filesystem-message', error.message);
+        setText('#restart-title', 'Restart failed');
+        $('#restart-message').className = 'error';
+        setText('#restart-message', error.message);
+        $('#restart-close').hidden = false;
         button.disabled = false;
       }
     }
@@ -588,36 +1001,206 @@
         const result = await response.json().catch(() => ({}));
         if (!response.ok) {
           if (result.error === 'height_out_of_range') showTargetHeightError();
-          else setText('#command-message', result.error === 'profile_not_configured'
+          else if (result.error === 'child_locked') showSettingsToast('Child lock is active. Unlock the desk to move it.', 'error');
+          else showSettingsToast(result.error === 'profile_not_configured'
             ? 'Height control is unavailable until a desk profile is qualified.'
-            : `Height request rejected (${response.status}).`);
+            : `Height request rejected (${response.status}).`, 'error');
           return;
         }
-        setText('#command-message', 'Height request accepted by the device.');
+        showSettingsToast('Height request accepted by the device.');
       } catch (error) {
-        setText('#command-message', error.message);
+        showSettingsToast(error.message, 'error');
       }
     }
 
+    async function sendPreset(slot, operation) {
+      if (!Number.isInteger(slot) || slot < 1 || slot > 4 || !['recall', 'save'].includes(operation)) return;
+      const button = operation === 'save' ? $('#preset-save-submit') : $(`#preset-${slot}`);
+      if (button.disabled || presetPending) return;
+      presetPending = true;
+      updateMovementControls();
+      try {
+        const response = await fetch('/api/v1/commands/preset', {
+          method: 'POST', headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({request_id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, preset: slot, operation})
+        });
+        const result = await response.json();
+        if (!response.ok || result.accepted !== true) {
+          const messages = {child_locked: 'Child lock is active. Unlock the desk first.',
+            height_out_of_range: 'The saved position is outside the configured height limits.',
+            preset_unavailable: 'This preset has no readable saved height.',
+            presets_unavailable: 'Presets are unavailable for this controller.'};
+          throw new Error(messages[result.error] || `Preset request rejected (${response.status}).`);
+        }
+        if (operation === 'save') {
+          deskPresets[slot - 1] = null;
+          $('#preset-save-details').open = false;
+        }
+        showSettingsToast(operation === 'save' ? `Save preset ${slot} requested. Waiting for the controller's stored height.` : `Preset ${slot} recall accepted by the device.`);
+      } catch (error) {
+        showSettingsToast(error.message, 'error');
+      } finally {
+        presetPending = false;
+        updateMovementControls();
+      }
+    }
+
+    async function saveCurrentHeight(event) {
+      event.preventDefault();
+      await sendPreset(Number($('#preset-save-slot').value), 'save');
+    }
+
     function showUnavailable() {
+      deskReady = null;
+      showDeskSetupStatus();
+      childLockAvailable = false;
+      updateChildLockControl();
+      $('#desk-setup-notice').hidden = false;
       setText('#state-label', 'No status connection');
       setText('#state-message', 'Retrying the local PandaDesk API…');
-      document.querySelectorAll('[data-direction]').forEach(button => { button.disabled = true; });
-      setTargetControlsEnabled(false, false);
+    }
+
+    function formatBytes(value) {
+      if (!Number.isFinite(value) || value < 0) return '—';
+      const unit = value >= 1048576 ? 'MiB' : 'KiB';
+      return `${(value / (unit === 'MiB' ? 1048576 : 1024)).toFixed(1)} ${unit}`;
+    }
+
+    function showSystemInfo(info) {
+      setText('#info-target', info.target || '—');
+      setText('#info-revision', info.pcb_revision || '—');
+      setText('#info-cores', Number.isInteger(info.cpu_cores) ? String(info.cpu_cores) : '—');
+      setText('#info-cpu', Number.isFinite(info.cpu_mhz) ? `${info.cpu_mhz} MHz` : '—');
+      setText('#info-flash', formatBytes(info.flash_bytes));
+      const resets = ['Unknown', 'Power on', 'External reset', 'Software restart', 'Panic / exception',
+        'Interrupt watchdog', 'Task watchdog', 'Other watchdog', 'Deep sleep wake', 'Brownout',
+        'SDIO reset', 'USB reset', 'JTAG reset', 'eFuse error', 'Power glitch', 'CPU lockup'];
+      setText('#info-reset', resets[info.reset_reason] || 'Unknown');
+      setText('#info-heap-free', formatBytes(info.heap_free_bytes));
+      setText('#info-heap-min', formatBytes(info.heap_min_free_bytes));
+    }
+
+    let infoBusy = false;
+    async function loadInfo() {
+      if (infoBusy || updateBusy || document.hidden || $('#info-page').hidden || !$('#info-details').open) return;
+      infoBusy = true;
+      $('#info-refresh').disabled = true;
+      $('#info-status').hidden = true;
+      setText('#info-status', '');
+      try {
+        const [infoResponse, stateResponse] = await Promise.all([
+          fetch('/api/v1/info', {cache: 'no-store'}), fetch('/api/v1/state', {cache: 'no-store'})
+        ]);
+        if (!infoResponse.ok || !stateResponse.ok) throw new Error('Information unavailable');
+        const [info, state] = await Promise.all([infoResponse.json(), stateResponse.json()]);
+        showSystemInfo(info);
+        showDeviceStatus(state);
+        showMqttStatus(state.mqtt);
+      } catch {
+        setText('#info-status', 'Device information unavailable. Try Refresh.');
+        $('#info-status').hidden = false;
+      } finally {
+        infoBusy = false;
+        $('#info-refresh').disabled = false;
+      }
+    }
+
+    let logCursor = '0';
+    let logBoot = '';
+    let logsPaused = false;
+    let logRequest;
+    let logTimer;
+
+    function logsActive() {
+      return ['#info', '#logs'].includes(location.hash) && $('#logs-details').open && !document.hidden && !logsPaused && !updateBusy;
+    }
+
+    function scrollLogs() {
+      if ($('#logs-autoscroll').checked) $('#logs-output').scrollTop = $('#logs-output').scrollHeight;
+    }
+
+    function setLogStatus(label, live = false) {
+      if ($('#logs-status-label').textContent !== label) setText('#logs-status-label', label);
+      $('#logs-status').setAttribute('data-live', String(live));
+    }
+
+    async function refreshLogs() {
+      if (!logsActive() || logRequest) return;
+      clearTimeout(logTimer);
+      const controller = new AbortController();
+      logRequest = controller;
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      try {
+        const query = logBoot ? `?since=${logCursor}&boot=${logBoot}` : '';
+        const response = await fetch(`/api/v1/logs${query}`, {cache: 'no-store', signal: controller.signal});
+        if (!response.ok) throw new Error('Logs unavailable');
+        const cursor = response.headers.get('X-Log-Cursor');
+        const boot = response.headers.get('X-Log-Boot');
+        if (!/^\d{1,20}$/.test(cursor || '') || !/^\d{1,10}$/.test(boot || '')) throw new Error('Invalid log response');
+        const text = await response.text();
+        if (controller.signal.aborted || !logsActive()) return;
+        const output = $('#logs-output');
+        if (logBoot && boot !== logBoot) output.textContent = '[Device restarted; previous logs cleared.]\n';
+        const gap = response.headers.get('X-Log-Dropped') === '1' ? '\n[Earlier log output was overwritten.]\n' : '';
+        // Bound browser memory too; render device text without interpreting HTML or terminal colours.
+        output.textContent = (output.textContent + gap + text.replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')).slice(-32768);
+        logCursor = cursor;
+        logBoot = boot;
+        setLogStatus('Live', true);
+        scrollLogs();
+      } catch (error) {
+        if (logsActive()) setLogStatus('Retrying');
+      } finally {
+        clearTimeout(timeout);
+        logRequest = null;
+        if (logsActive()) logTimer = setTimeout(refreshLogs, 2000);
+      }
+    }
+
+    function syncLogPolling() {
+      clearTimeout(logTimer);
+      if (logsActive()) {
+        setLogStatus('Connecting');
+        refreshLogs();
+      } else {
+        logRequest?.abort();
+        setLogStatus(logsPaused ? 'Paused' : 'Inactive');
+      }
+    }
+
+    function toggleLogsPaused() {
+      logsPaused = !logsPaused;
+      setText('#logs-pause', logsPaused ? 'Resume' : 'Pause');
+      $('#logs-pause').setAttribute('aria-pressed', String(logsPaused));
+      syncLogPolling();
+    }
+
+    function downloadLogs() {
+      const url = URL.createObjectURL(new Blob([$('#logs-output').textContent], {type: 'text/plain;charset=utf-8'}));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'pandadesk-logs.txt';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     function showPage() {
-      const page = ['#settings', '#api'].includes(location.hash) ? location.hash.slice(1) : 'home';
+      const page = ['#info', '#logs'].includes(location.hash) ? 'info' : location.hash === '#settings' ? 'settings' : 'home';
+      if (page !== 'home') releaseMove(true);
       $('#home-page').hidden = page !== 'home';
+      $('#info-page').hidden = page !== 'info';
       $('#settings-page').hidden = page !== 'settings';
-      $('#api-page').hidden = page !== 'api';
+      if (location.hash === '#logs') $('#logs-details').open = true;
       document.querySelectorAll('[data-page]').forEach(link => {
         if (link.dataset.page === page) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
       });
+      syncLogPolling();
+      if (page === 'info') loadInfo();
     }
 
-    async function refresh() {
+    async function refresh(updateDeviceStatus = false) {
+      if (updateBusy) return;
       try {
         const [stateResponse, capabilitiesResponse] = await Promise.all([
           fetch('/api/v1/state', {cache: 'no-store'}),
@@ -626,56 +1209,166 @@
         if (!stateResponse.ok || !capabilitiesResponse.ok) throw new Error('API unavailable');
         const [state, capabilities] = await Promise.all([stateResponse.json(), capabilitiesResponse.json()]);
         const ready = state.ready === true && capabilities.profile_configured === true;
-        setText('#firmware-version', state.firmware_version || 'unknown');
-        setText('#filesystem-version', state.filesystem_version || 'unknown');
-        setText('#state-label', state.state || 'Unknown state');
-        setText('#state-message', ready ? 'Desk profile is active.' : 'No desk profile is configured. No desk commands are sent.');
-        setText('#profile', state.profile || 'Not configured');
+        deskCapabilities = capabilities;
+        deskPresets = Array.isArray(state.presets) ? state.presets : [];
+        if (updateDeviceStatus) showDeviceStatus(state);
+        showMqttStatus(state.mqtt);
+        deskReady = ready;
+        showDeskSetupStatus();
+        const profile = state.profile || savedDeskProfile || '';
+        setText('#profile', Array.from($('#desk-profile').options).find(option => option.value === profile)?.text || profile || 'Not configured');
         const height = state.height && state.height.value != null
-          ? `${state.height.value} ${state.height.unit || ''} (${state.height.quality || 'unknown'})`.trim()
-          : `Unknown (${state.height?.quality || 'unknown'})`;
+          ? `${state.height.value} ${state.height.unit || ''}`.trim()
+          : 'Unknown';
         setText('#height', height);
         setText('#movement', state.moving === true ? 'Moving' : state.moving === false ? 'Stopped' : 'Unknown');
-        setText('#locked', state.locked === true ? 'Locked' : state.locked === false ? 'Unlocked' : 'Unknown');
-        setText('#sequence', Number.isInteger(state.sequence) ? String(state.sequence) : '—');
-        document.querySelectorAll('[data-direction]').forEach(button => {
-          button.disabled = !ready || (button.dataset.direction === 'stop' ? capabilities.stop !== true : capabilities.move !== true);
-        });
-        setTargetControlsEnabled(true, ready && capabilities.target_height === true);
-        setControlHelp(ready ? 'Use this control to send a short movement request.' : 'Controls unlock when a qualified desk profile and command transport are available.');
+        setText('#locked', state.locked === true ? 'Locked' : state.locked === false ? 'Unlocked' : 'Unavailable');
+        childLockState = typeof state.locked === 'boolean' ? state.locked : null;
+        childLockAvailable = ready && capabilities.child_lock === true;
+        updateChildLockControl();
       } catch {
+        if (updateDeviceStatus) setText('#network-mode', 'Status unavailable');
+        $('#mqtt-status-message').hidden = false;
+        setText('#mqtt-status-message', 'Status unavailable');
+        $('#mqtt-status-details').hidden = true;
         showUnavailable();
       }
     }
 
-    async function sendMove(direction) {
+    let moveRequests = Promise.resolve();
+    let heldMove = null;
+    function sendMove(direction, notify = true, isCurrent = () => true) {
+      // Keep release/Stop behind an in-flight move so a late response cannot restart it.
+      moveRequests = moveRequests.then(() => isCurrent() ? requestMove(direction, notify) : false);
+      return moveRequests;
+    }
+
+    async function requestMove(direction, notify) {
       const body = {request_id: `${Date.now()}-${Math.random().toString(16).slice(2)}`, direction};
       if (direction !== 'stop') body.expires_ms = 1000;
       try {
         const response = await fetch('/api/v1/commands/move', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(body)
+          body: JSON.stringify(body),
+          keepalive: direction === 'stop'
         });
         if (!response.ok) {
           const result = await response.json().catch(() => ({}));
-          throw new Error(result.error || `Command rejected (${response.status})`);
+          throw new Error(result.error === 'child_locked' ? 'Child lock is active. Unlock the desk to move it.'
+            : result.error || `Command rejected (${response.status})`);
         }
-        setText('#command-message', 'Command accepted by the device.');
+        if (notify) showSettingsToast('Command accepted by the device.');
+        return true;
       } catch (error) {
-        setText('#command-message', error.message);
+        showSettingsToast(error.message, 'error');
+        return false;
       }
     }
 
-    document.querySelectorAll('[data-direction]').forEach(button => {
-      button.addEventListener('click', () => sendMove(button.dataset.direction));
-    });
+    function releaseMove(cancel = false) {
+      const hold = heldMove;
+      if (!hold) return;
+      heldMove = null;
+      clearTimeout(hold.timer);
+      hold.cancelled = cancel || hold.holding;
+      const completed = hold.cancelled ? sendMove('stop', false) : hold.request;
+      if (!cancel) void completed.then(ok => {
+        if (ok && !heldMove) showSettingsToast('Command accepted by the device.');
+      });
+    }
+
+    function pressMove(button, input) {
+      if (button.disabled || heldMove) return;
+      const hold = {button, input, holding: false, cancelled: false, timer: null};
+      heldMove = hold;
+      hold.request = sendMove(button.dataset.direction, false, () => !hold.cancelled);
+      void hold.request.then(ok => {
+        if (!ok && heldMove === hold) releaseMove(true);
+      });
+      const renew = async () => {
+        if (heldMove !== hold) return;
+        hold.holding = true;
+        const ok = await sendMove(button.dataset.direction, false, () => heldMove === hold);
+        if (heldMove !== hold) return;
+        if (!ok) releaseMove(true);
+        else hold.timer = setTimeout(renew, 250);
+      };
+      hold.timer = setTimeout(renew, 350);
+    }
+
+    function bindMovementControls() {
+      document.querySelectorAll('[data-direction]').forEach(button => {
+        if (button.dataset.direction === 'stop') {
+          button.addEventListener('click', () => {
+            if (heldMove) releaseMove(true);
+            else void sendMove('stop');
+          });
+          return;
+        }
+        button.addEventListener('pointerdown', event => {
+          if (event.button !== 0 || button.disabled || heldMove) return;
+          button.setPointerCapture(event.pointerId);
+          pressMove(button, event.pointerId);
+        });
+        button.addEventListener('pointerup', event => {
+          if (heldMove?.input === event.pointerId) releaseMove();
+        });
+        for (const type of ['pointercancel', 'lostpointercapture']) {
+          button.addEventListener(type, event => {
+            if (heldMove?.input === event.pointerId) releaseMove(true);
+          });
+        }
+        button.addEventListener('contextmenu', event => event.preventDefault());
+        button.addEventListener('keydown', event => {
+          if (![' ', 'Enter'].includes(event.key)) return;
+          event.preventDefault();
+          if (!event.repeat) pressMove(button, event.key);
+        });
+        button.addEventListener('keyup', event => {
+          if (![' ', 'Enter'].includes(event.key)) return;
+          event.preventDefault();
+          if (heldMove?.button === button && heldMove.input === event.key) releaseMove();
+        });
+        button.addEventListener('blur', () => releaseMove(true));
+        // Keyboard defaults are prevented above; detail 0 also supports assistive activation.
+        button.addEventListener('click', event => {
+          if (event.detail === 0 && !button.disabled && !heldMove) void sendMove(button.dataset.direction);
+        });
+      });
+      window.addEventListener('blur', () => releaseMove(true));
+      window.addEventListener('pagehide', () => releaseMove(true));
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) releaseMove(true);
+      });
+    }
+
+    bindMovementControls();
+    $('#info-refresh').addEventListener('click', loadInfo);
+    $('#info-details').addEventListener('toggle', loadInfo);
+    $('#logs-details').addEventListener('toggle', syncLogPolling);
+    $('#logs-pause').addEventListener('click', toggleLogsPaused);
+    $('#logs-autoscroll').addEventListener('change', scrollLogs);
+    $('#logs-download').addEventListener('click', downloadLogs);
+    document.addEventListener('visibilitychange', syncLogPolling);
+    $('#toast-close').addEventListener('click', clearSettingsToast);
+    $('#updates-toast-close').addEventListener('click', () => { $('#updates-toast').hidden = true; });
+    $('#settings-toast').addEventListener('mouseenter', pauseSettingsToast);
+    $('#settings-toast').addEventListener('mouseleave', resumeSettingsToast);
+    $('#settings-toast').addEventListener('focusin', pauseSettingsToast);
+    $('#settings-toast').addEventListener('focusout', resumeSettingsToast);
+    $('#mdns-close').addEventListener('click', () => { $('#mdns-notice').hidden = true; });
     $('#target-height-input').addEventListener('input', syncTargetInputToSlider);
     $('#target-height-input').addEventListener('change', () => {
       if (syncTargetInputToSlider()) $('#target-height-input').value = Number($('#target-height-input').value).toFixed(1);
     });
     $('#target-height-slider').addEventListener('input', syncTargetSliderToInput);
     $('#target-go').addEventListener('click', sendTargetHeight);
+    $('#child-lock-control').addEventListener('click', sendChildLock);
+    for (let slot = 1; slot <= 4; slot++) {
+      $(`#preset-${slot}`).addEventListener('click', () => sendPreset(slot, 'recall'));
+    }
+    $('#preset-save-form').addEventListener('submit', saveCurrentHeight);
     $('#wifi-form').addEventListener('submit', saveWifiSettings);
     $('#device-form').addEventListener('submit', saveDeviceSettings);
     $('#desk-form').addEventListener('submit', saveDeskSettings);
@@ -685,7 +1378,12 @@
     $('#mqtt-enabled').addEventListener('change', () => setMqttFieldsVisible($('#mqtt-enabled').checked));
     $('#firmware-form').addEventListener('submit', uploadFirmware);
     $('#filesystem-form').addEventListener('submit', uploadFilesystem);
+    $('#update-close').addEventListener('click', () => $('#update-dialog').close());
+    $('#update-dialog').addEventListener('cancel', event => { if (updateBusy) event.preventDefault(); });
     $('#reset-open').addEventListener('click', () => $('#reset-dialog').showModal());
+    $('#restart-device').addEventListener('click', restartDevice);
+    $('#restart-close').addEventListener('click', () => $('#restart-dialog').close());
+    $('#restart-dialog').addEventListener('cancel', event => { if ($('#restart-device').disabled) event.preventDefault(); });
     $('#reset-dialog').addEventListener('close', () => {
       if ($('#reset-dialog').returnValue === 'reset') resetDevice();
     });
@@ -694,7 +1392,8 @@
     loadWifiSettings();
     loadDeviceSettings();
     loadMqttSettings();
-    refresh();
+    refresh(true);
+    checkForUpdates();
     setInterval(refresh, 3000);
   </script>
 </body>

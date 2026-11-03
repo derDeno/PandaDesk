@@ -12,11 +12,18 @@ enum class MotionState : uint8_t { unknown, stopped, moving };
 void start_if_configured(bool nvs_available);
 bool is_ready();
 bool supports_target_height();
+bool supports_presets();
+bool preset_height_tenths_cm(uint8_t preset, uint16_t *height);
 const char *profile_name();
 bool height_tenths_cm(uint16_t *height);
+bool child_locked(bool *locked);
+bool supports_child_lock();
+esp_err_t set_child_lock(bool locked);
 MotionState motion_state();
 uint32_t state_sequence();
 esp_err_t queue_move(Direction direction, uint16_t duration_ms);
 esp_err_t queue_target_height(uint16_t height_tenths_cm);
+esp_err_t queue_preset(uint8_t preset, uint16_t minimum, uint16_t maximum);
+esp_err_t queue_save_preset(uint8_t preset);
 
 }  // namespace pandadesk::jiecang_transport

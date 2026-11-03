@@ -24,6 +24,11 @@ constexpr size_t kMaxFrameSize = 32;
 constexpr uint32_t kWakeSettleMs = 1100;
 constexpr uint32_t kWakeHoldMs = 10000;
 constexpr uint32_t kHandsetReplyWindowMs = 4;
+static_assert(pdMS_TO_TICKS(kHandsetReplyWindowMs) > 0,
+              "FreeRTOS tick rate must represent the Loctek handset reply window");
+// UART work preempts TCP/IP (18), while Wi-Fi and system event tasks keep priority.
+constexpr UBaseType_t kUartTaskPriority = 19;
+static_assert(kUartTaskPriority > CONFIG_LWIP_TCPIP_TASK_PRIO);
 constexpr uint8_t kStart = 0x9B;
 constexpr uint8_t kEnd = 0x9D;
 constexpr uint8_t kPoll = 0x11;
@@ -365,8 +370,8 @@ void transport_task(void *) {
   const uint32_t now = now_ms();
   gWakeReadyAtMs.store(now + kWakeSettleMs);
   gWakeReleaseAtMs.store(now + kWakeHoldMs);
-  if (xTaskCreate(handset_receive_task, "loctek_handset", 3072, nullptr, 7, nullptr) != pdPASS ||
-      xTaskCreate(controller_receive_task, "loctek_controller", 4096, nullptr, 7, nullptr) != pdPASS) {
+  if (xTaskCreate(handset_receive_task, "loctek_handset", 3072, nullptr, kUartTaskPriority, nullptr) != pdPASS ||
+      xTaskCreate(controller_receive_task, "loctek_controller", 4096, nullptr, kUartTaskPriority, nullptr) != pdPASS) {
     ESP_LOGE(kTag, "Could not start Loctek UART tasks");
     gpio_set_level(pandadesk::pins::loctek_wake, 0);
     gpio_set_level(pandadesk::pins::translator_enable, 0);
