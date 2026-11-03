@@ -1,5 +1,7 @@
 #include "pandadesk/jiecang_rj12.hpp"
 
+#include <cstring>
+
 namespace pandadesk::jiecang_rj12 {
 namespace {
 constexpr uint8_t checksum(const uint8_t *bytes, size_t parameter_count) {
@@ -12,6 +14,20 @@ constexpr uint16_t read_u16_be(const uint8_t *bytes) {
   return static_cast<uint16_t>((static_cast<uint16_t>(bytes[0]) << 8) | bytes[1]);
 }
 }  // namespace
+
+const char *normalize_model(const char *model) {
+  if (model == nullptr) return nullptr;
+  if (std::strcmp(model, kNoTargetHeightModel) == 0) return kNoTargetHeightModel;
+  if (std::strcmp(model, kGenericModel) == 0) return kGenericModel;
+  // Frozen aliases preserve settings saved before the generic RJ12 option existed.
+  constexpr const char *legacy_models[] = {"JCB35M11C", "MDS36DR", "JCB36N2CA", "JCB36N2CA-230",
+                                          "JCB36N2HAG-230", "JCHT35K9-003-v4", "JCB36NE2", "JCB36M",
+                                          "JCB36NE2A-230"};
+  for (const char *legacy : legacy_models) {
+    if (std::strcmp(model, legacy) == 0) return kGenericModel;
+  }
+  return nullptr;
+}
 
 bool decode_frame(const uint8_t *bytes, size_t size, Frame *frame) {
   if (bytes == nullptr || frame == nullptr || size < 6 || size > kMaxFrameSize ||
@@ -48,6 +64,25 @@ bool decode_physical_limits_raw(const Frame &frame, uint16_t *maximum, uint16_t 
   *maximum = read_u16_be(&frame.bytes[4]);
   *minimum = read_u16_be(&frame.bytes[6]);
   return *minimum <= *maximum;
+}
+
+bool decode_child_lock(const Frame &frame, bool *locked) {
+  if (locked == nullptr || frame.size != 7 || frame.bytes[0] != kControllerAddress ||
+      frame.bytes[1] != kControllerAddress || frame.bytes[2] != kChildLockCommand ||
+      frame.bytes[3] != 1 || frame.bytes[4] > 1) {
+    return false;
+  }
+  *locked = frame.bytes[4] == 1;
+  return true;
+}
+
+bool decode_preset_raw(const Frame &frame, uint8_t *preset, uint16_t *raw_height) {
+  if (preset == nullptr || raw_height == nullptr || frame.size != 8 ||
+      frame.bytes[0] != kControllerAddress || frame.bytes[1] != kControllerAddress ||
+      frame.bytes[2] < 0x25 || frame.bytes[2] > 0x28 || frame.bytes[3] != 2) return false;
+  *preset = frame.bytes[2] - 0x24;
+  *raw_height = read_u16_be(&frame.bytes[4]);
+  return true;
 }
 
 namespace {

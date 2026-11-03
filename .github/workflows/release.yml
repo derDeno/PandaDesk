@@ -54,7 +54,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.firmware_version }}
-          name: PandaDesk v${{ env.firmware_version }}
+          name: v${{ env.firmware_version }}
           draft: true
           generate_release_notes: true
           files: release-assets/*.bin
