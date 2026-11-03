@@ -4,6 +4,10 @@ Add local wireless control to your height-adjustable desk. PandaDesk lets you us
 a browser, Elgato Stream Deck, Home Assistant, or your own integration while keeping
 the original handset on supported desk/controller combinations.
 
+**PandaDesk's standout feature: one board for all three common desk controller types.**
+It is the only board on the market that supports Jiecang RJ12, Jiecang/Jarvis RJ45,
+and Loctek/FlexiSpot RJ45, while most alternatives support just one.
+
 > [!IMPORTANT]
 > PandaDesk V1 is a prototype. Check the [hardware and compatibility guide](https://github.com/derDeno/PandaDesk/wiki/Hardware-and-compatibility)
 > for your exact controller and handset before connecting it. Connect only one
