@@ -9,7 +9,7 @@ root = Path(__file__).resolve().parents[1]
 source = (root / "src" / "wifi.cpp").read_text(encoding="utf-8")
 names = source[source.index("constexpr char kMdnsHostname"):source.index("char g_portal_url")]
 initialize = source[source.index("void initialize_hostnames("):source.index("void event_handler(")]
-mdns = source[source.index("void start_mdns("):source.index("void dns_task(")]
+mdns = source[source.index("void start_mdns("):source.index("void serve_dns(")]
 harness = r"""
 #define _CRT_SECURE_NO_WARNINGS
 #define _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH
