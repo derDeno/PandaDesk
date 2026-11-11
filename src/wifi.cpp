@@ -25,6 +25,10 @@ namespace {
 constexpr char kTag[] = "PandaDeskWiFi";
 constexpr EventBits_t kGotIp = BIT0;
 constexpr EventBits_t kDisconnected = BIT1;
+constexpr EventBits_t kStopDns = BIT2;
+constexpr EventBits_t kDnsStopped = BIT3;
+constexpr TickType_t kConnectTimeout = pdMS_TO_TICKS(CONFIG_PANDA_WIFI_CONNECT_TIMEOUT_MS);
+constexpr TickType_t kSetupRetryDelay = pdMS_TO_TICKS(5000);
 EventGroupHandle_t wifi_events;
 std::atomic<bool> mdns_started{false};
 std::atomic<bool> g_connected{false};
@@ -76,18 +80,25 @@ bool load_credentials(bool nvs_available, Credentials &credentials) {
          ssid_size <= sizeof(credentials.ssid) && password_size <= sizeof(credentials.password);
 }
 
-bool connect_with_timeout() {
-  const TickType_t timeout = pdMS_TO_TICKS(CONFIG_PANDA_WIFI_CONNECT_TIMEOUT_MS);
-  const TickType_t started = xTaskGetTickCount();
-  while (xTaskGetTickCount() - started < timeout) {
-    xEventGroupClearBits(wifi_events, kGotIp | kDisconnected);
-    const esp_err_t result = esp_wifi_connect();
-    if (result != ESP_OK && result != ESP_ERR_WIFI_CONN) return false;
+EventBits_t connect_once(TickType_t timeout) {
+  xEventGroupClearBits(wifi_events, kGotIp | kDisconnected);
+  if (g_connected.load()) return kGotIp;
 
-    const TickType_t elapsed = xTaskGetTickCount() - started;
-    const TickType_t remaining = timeout > elapsed ? timeout - elapsed : 0;
-    const EventBits_t bits = xEventGroupWaitBits(
-        wifi_events, kGotIp | kDisconnected, pdTRUE, pdFALSE, remaining);
+  const TickType_t started = xTaskGetTickCount();
+  const esp_err_t result = esp_wifi_connect();
+  if (result != ESP_OK && result != ESP_ERR_WIFI_CONN) return 0;
+
+  const TickType_t elapsed = xTaskGetTickCount() - started;
+  const TickType_t remaining = elapsed < timeout ? timeout - elapsed : 0;
+  const EventBits_t bits = xEventGroupWaitBits(
+      wifi_events, kGotIp | kDisconnected, pdFALSE, pdFALSE, remaining);
+  return g_connected.load() ? kGotIp : bits & kDisconnected;
+}
+
+bool connect_with_timeout() {
+  const TickType_t started = xTaskGetTickCount();
+  for (TickType_t elapsed = 0; elapsed < kConnectTimeout; elapsed = xTaskGetTickCount() - started) {
+    const EventBits_t bits = connect_once(kConnectTimeout - elapsed);
     if (bits & kGotIp) return true;
     if (!(bits & kDisconnected)) return false;
   }
@@ -132,13 +143,18 @@ void check_mdns_conflict() {
   }
 }
 
-void dns_task(void *argument) {
+void serve_dns(esp_netif_t *ap_netif) {
   esp_netif_ip_info_t ip_info{};
-  ESP_ERROR_CHECK(esp_netif_get_ip_info(static_cast<esp_netif_t *>(argument), &ip_info));
+  ESP_ERROR_CHECK(esp_netif_get_ip_info(ap_netif, &ip_info));
   const int socket_fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (socket_fd < 0) {
     ESP_LOGE(kTag, "Could not create captive DNS socket: %d", errno);
-    vTaskDelete(nullptr);
+    return;
+  }
+  const timeval receive_timeout{.tv_sec = 0, .tv_usec = 250000};
+  if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &receive_timeout, sizeof(receive_timeout)) != 0) {
+    ESP_LOGE(kTag, "Could not set captive DNS receive timeout: %d", errno);
+    close(socket_fd);
     return;
   }
   sockaddr_in local{};
@@ -148,18 +164,17 @@ void dns_task(void *argument) {
   if (bind(socket_fd, reinterpret_cast<sockaddr *>(&local), sizeof(local)) != 0) {
     ESP_LOGE(kTag, "Could not bind captive DNS socket: %d", errno);
     close(socket_fd);
-    vTaskDelete(nullptr);
     return;
   }
   ESP_LOGI(kTag, "Captive DNS listening on " IPSTR ":53", IP2STR(&ip_info.ip));
   uint8_t packet[512];
-  while (true) {
+  while (!(xEventGroupGetBits(wifi_events) & kStopDns)) {
     sockaddr_in client{};
     socklen_t client_length = sizeof(client);
     const int received = recvfrom(socket_fd, packet, sizeof(packet), 0,
                                   reinterpret_cast<sockaddr *>(&client), &client_length);
     if (received < 0) {
-      if (errno == EINTR) continue;
+      if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK) continue;
       ESP_LOGE(kTag, "Captive DNS receive failed: %d", errno);
       break;
     }
@@ -171,11 +186,15 @@ void dns_task(void *argument) {
     }
   }
   close(socket_fd);
+}
+
+void dns_task(void *argument) {
+  serve_dns(static_cast<esp_netif_t *>(argument));
+  xEventGroupSetBits(wifi_events, kDnsStopped);
   vTaskDelete(nullptr);
 }
 
-void start_access_point(esp_netif_t *ap_netif) {
-  g_connected.store(false);
+void configure_access_point(esp_netif_t *ap_netif) {
   esp_netif_ip_info_t ip_info{};
   ESP_ERROR_CHECK(esp_netif_get_ip_info(ap_netif, &ip_info));
   std::snprintf(g_portal_url, sizeof(g_portal_url), "http://" IPSTR "/", IP2STR(&ip_info.ip));
@@ -198,15 +217,55 @@ void start_access_point(esp_netif_t *ap_netif) {
   access_point.ap.max_connection = 4;
   access_point.ap.authmode = WIFI_AUTH_OPEN;
 
-  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &access_point));
+}
+
+void start_access_point(esp_netif_t *ap_netif, wifi_mode_t mode, bool wifi_started) {
+  ESP_ERROR_CHECK(esp_wifi_set_mode(mode));
   pandadesk::api::start();
-  ESP_ERROR_CHECK(esp_wifi_start());
-  ESP_LOGW(kTag, "Setup AP started: %s (open network)", access_point.ap.ssid);
+  if (!wifi_started) ESP_ERROR_CHECK(esp_wifi_start());
+  ESP_LOGW(kTag, "Setup AP started: %s (open network)", g_dhcp_hostname);
+  xEventGroupClearBits(wifi_events, kStopDns | kDnsStopped);
   if (xTaskCreate(dns_task, "pandadesk_dns", 3072, ap_netif, 5, nullptr) != pdPASS) {
     ESP_LOGE(kTag, "Could not create captive DNS task");
+    xEventGroupSetBits(wifi_events, kDnsStopped);
   }
   ESP_LOGI(kTag, "Captive portal: %s", g_portal_url);
+}
+
+void recover_from_access_point() {
+  while (!(connect_once(kConnectTimeout) & kGotIp)) {
+    // Give portal clients time between scans, while still accepting a late DHCP reply.
+    xEventGroupWaitBits(wifi_events, kGotIp, pdTRUE, pdFALSE, kSetupRetryDelay);
+  }
+  xEventGroupSetBits(wifi_events, kStopDns);
+  xEventGroupWaitBits(wifi_events, kDnsStopped, pdTRUE, pdFALSE, portMAX_DELAY);
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+  ESP_LOGI(kTag, "Wi-Fi recovered; setup AP stopped");
+}
+
+void run_station(esp_netif_t *ap_netif) {
+  bool wifi_started = esp_wifi_start() == ESP_OK;
+  while (true) {
+    if (!wifi_started || !connect_with_timeout()) {
+      ESP_LOGW(kTag, "Wi-Fi unavailable; falling back to setup AP");
+      if (mdns_started) {
+        mdns_free();
+        mdns_started = false;
+      }
+      start_access_point(ap_netif, WIFI_MODE_APSTA, wifi_started);
+      recover_from_access_point();
+      wifi_started = true;
+    }
+
+    start_mdns();
+    pandadesk::api::start();
+    while (!(xEventGroupWaitBits(wifi_events, kDisconnected, pdTRUE, pdFALSE,
+                                pdMS_TO_TICKS(1000)) & kDisconnected)) {
+      check_mdns_conflict();
+    }
+  }
 }
 
 void wifi_task(void *) {
@@ -238,10 +297,11 @@ void wifi_task(void *) {
   }
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_DISCONNECTED, event_handler, nullptr));
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, event_handler, nullptr));
+  configure_access_point(ap_netif);
 
   Credentials credentials;
   if (!load_credentials(nvs_available, credentials)) {
-    start_access_point(ap_netif);
+    start_access_point(ap_netif, WIFI_MODE_AP, false);
     vTaskDelete(nullptr);
     return;
   }
@@ -253,30 +313,11 @@ void wifi_task(void *) {
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &station));
 
-  const esp_err_t start_result = esp_wifi_start();
-  bool wifi_started = start_result == ESP_OK;
-  bool connected = wifi_started && connect_with_timeout();
-  if (connected) {
-    start_mdns();
-    pandadesk::api::start();
-    while (true) {
-      const EventBits_t bits = xEventGroupWaitBits(
-          wifi_events, kDisconnected, pdTRUE, pdFALSE, pdMS_TO_TICKS(1000));
-      check_mdns_conflict();
-      if (!(bits & kDisconnected)) continue;
-      if (!connect_with_timeout()) break;
-    }
-  }
+  run_station(ap_netif);
+}
 
-  ESP_LOGW(kTag, "Wi-Fi unavailable after %d ms; falling back to setup AP",
-           CONFIG_PANDA_WIFI_CONNECT_TIMEOUT_MS);
-  if (mdns_started) {
-    mdns_free();
-    mdns_started = false;
-  }
-  if (wifi_started) ESP_ERROR_CHECK(esp_wifi_stop());
-  start_access_point(ap_netif);
-  vTaskDelete(nullptr);
+bool access_point_enabled(wifi_mode_t mode) {
+  return mode == WIFI_MODE_AP || mode == WIFI_MODE_APSTA;
 }
 }  // namespace
 
@@ -297,9 +338,9 @@ Status status() {
   Status result;
   wifi_mode_t mode;
   if (esp_wifi_get_mode(&mode) != ESP_OK) return result;
-  result.access_point = mode == WIFI_MODE_AP;
+  result.access_point = access_point_enabled(mode);
   wifi_ap_record_t access_point{};
-  result.connected = connected() && esp_wifi_sta_get_ap_info(&access_point) == ESP_OK;
+  result.connected = !result.access_point && connected() && esp_wifi_sta_get_ap_info(&access_point) == ESP_OK;
   if (result.connected) {
     std::memcpy(result.ssid, access_point.ssid, sizeof(access_point.ssid));
     result.rssi = access_point.rssi;
@@ -321,6 +362,6 @@ Status status() {
 
 const char *captive_portal_url() {
   wifi_mode_t mode;
-  return esp_wifi_get_mode(&mode) == ESP_OK && mode == WIFI_MODE_AP ? g_portal_url : nullptr;
+  return esp_wifi_get_mode(&mode) == ESP_OK && access_point_enabled(mode) ? g_portal_url : nullptr;
 }
 }  // namespace pandadesk::wifi
